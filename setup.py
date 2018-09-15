@@ -22,6 +22,7 @@ setup(
     author_email='Flori@nKempenich.com',
     packages=['kata'],
     license='MIT',
+    scripts=['bin/kata'],
     install_requires=[
         # No dependencies for now
     ],
