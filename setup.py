@@ -24,7 +24,7 @@ setup(
     license='MIT',
     scripts=['bin/kata'],
     install_requires=[
-        # No dependencies for now
+        'click'
     ],
     include_package_data=True
 )
