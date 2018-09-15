@@ -1,8 +1,7 @@
 # Kata
+[![Travis](https://img.shields.io/travis/FlorianKempenich/kata.svg)](https://travis-ci.org/FlorianKempenich/kata) [![PyPI](https://img.shields.io/pypi/v/kata.svg)](https://pypi.org/project/kata/)
 
 Kata: A single command to get a ready to use TDD setup for your Kata, in your language of choice
-
-
 
 
 
