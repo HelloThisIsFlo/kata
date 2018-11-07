@@ -1,8 +1,7 @@
-from pprint import pprint
+from concurrent import futures
 
 import pytest
 
-from src.kata.github.api import Api
 from src.kata.github.repo import Repo
 
 NOT_USED = 'Not Used'
@@ -103,15 +102,15 @@ def mock_api():
 
 @pytest.fixture
 def repo(mock_api):
-    return Repo(mock_api)
+    thread_pool_executor = futures.ThreadPoolExecutor(100, thread_name_prefix='subdir-explorer-')
+    return Repo(mock_api, thread_pool_executor)
 
 
-@pytest.mark.skip
-def test_sandbox():
-    api = Api()
-    res = api.contents('FlorianKempenich', 'ansible-role-python-virtualenv', '')
-    pprint(res)
-    pytest.fail('debug')
+def sort_by_file_path(files):
+    def file_path(file_entry):
+        return file_entry['file_path']
+
+    return sorted(files, key=file_path)
 
 
 class TestScenarios:
@@ -138,7 +137,7 @@ class TestScenarios:
         result = repo_with_scenario.file_urls(path='')
 
         # Then: List all the files
-        assert repo_with_scenario.file_urls(path='') == [
+        assert sort_by_file_path(result) == sort_by_file_path([
             {
                 'file_path': 'a_file.txt',
                 'download_url': 'https://github_url_for/a_file.txt'
@@ -150,7 +149,7 @@ class TestScenarios:
             {
                 'file_path': 'a_third_file.md',
                 'download_url': 'https://github_url_for/a_third_file.md'
-            }]
+            }])
 
     def test_directory_containing_files(self, repo_with_scenario):
         # Given: A repo containing a dir, itself containing files | See: `mocked_contents_scenarios`
@@ -160,7 +159,7 @@ class TestScenarios:
         result = repo_with_scenario.file_urls(path='')
 
         # Then: List all the files recursively found
-        assert result == [
+        assert sort_by_file_path(result) == sort_by_file_path([
             {
                 'file_path': 'some_dir/a_file.txt',
                 'download_url': 'https://github_url_for/some_dir/a_file.txt'
@@ -172,7 +171,7 @@ class TestScenarios:
             {
                 'file_path': 'some_dir/a_third_file.md',
                 'download_url': 'https://github_url_for/some_dir/a_third_file.md'
-            }]
+            }])
 
     def test_multiple_directories_containing_files(self, repo_with_scenario):
         # Given: A repo containing multiple dirs, themselves containing files | See: `mocked_contents_scenarios`
@@ -182,7 +181,7 @@ class TestScenarios:
         result = repo_with_scenario.file_urls(path='')
 
         # Then: List all the files recursively found
-        assert result == [
+        assert sort_by_file_path(result) == sort_by_file_path([
             {
                 'file_path': 'some_dir/a_file.txt',
                 'download_url': 'https://github_url_for/some_dir/a_file.txt'
@@ -206,7 +205,7 @@ class TestScenarios:
             {
                 'file_path': 'another_dir/some_other_file.md',
                 'download_url': 'https://github_url_for/another_dir/some_other_file.md'
-            }]
+            }])
 
     def test_multiple_directories_one_is_empty(self, repo_with_scenario):
         # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
@@ -216,7 +215,7 @@ class TestScenarios:
         result = repo_with_scenario.file_urls(path='')
 
         # Then: Empty dir is ignored
-        assert result == [
+        assert sort_by_file_path(result) == sort_by_file_path([
             {
                 'file_path': 'some_dir/a_file.txt',
                 'download_url': 'https://github_url_for/some_dir/a_file.txt'
@@ -228,7 +227,7 @@ class TestScenarios:
             {
                 'file_path': 'some_dir/a_third_file.md',
                 'download_url': 'https://github_url_for/some_dir/a_third_file.md'
-            }]
+            }])
 
     def test_mix_of_files_and_directory(self, repo_with_scenario):
         # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
@@ -238,7 +237,7 @@ class TestScenarios:
         result = repo_with_scenario.file_urls(path='')
 
         # Then: Files hierarchy is flattened
-        assert result == [
+        assert sort_by_file_path(result) == sort_by_file_path([
             {
                 'file_path': 'a_file.txt',
                 'download_url': 'https://github_url_for/a_file.txt'
@@ -250,7 +249,7 @@ class TestScenarios:
             {
                 'file_path': 'some_dir/another_file.py',
                 'download_url': 'https://github_url_for/some_dir/another_file.py'
-            }]
+            }])
 
     def test_nested_directories(self, repo_with_scenario):
         # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
@@ -260,7 +259,7 @@ class TestScenarios:
         result = repo_with_scenario.file_urls(path='')
 
         # Then: Files hierarchy is flattened
-        assert result == [
+        assert sort_by_file_path(result) == sort_by_file_path([
             {
                 'file_path': 'file_at_root.txt',
                 'download_url': 'https://github_url_for/file_at_root.txt'
@@ -276,7 +275,7 @@ class TestScenarios:
             {
                 'file_path': 'dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt',
                 'download_url': 'https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
-            }]
+            }])
 
     def test_nested_directories_path_isn_t_root(self, repo_with_scenario):
         # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
@@ -286,7 +285,7 @@ class TestScenarios:
         result = repo_with_scenario.file_urls(path='dir_at_root/dir_at_level_1')
 
         # Then: Files hierarchy is flattened
-        assert result == [
+        assert sort_by_file_path(result) == sort_by_file_path([
             {
                 'file_path': 'dir_at_root/dir_at_level_1/file_at_level_2.txt',
                 'download_url': 'https://github_url_for/dir_at_root/dir_at_level_1/file_at_level_2.txt'
@@ -294,4 +293,4 @@ class TestScenarios:
             {
                 'file_path': 'dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt',
                 'download_url': 'https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
-            }]
+            }])
