@@ -1,13 +1,22 @@
 language: python
-python:
-- '3.6'
-- '3.7-dev'
-install: pip install tox-travis
-script: tox
-deploy:
-  provider: pypi
-  user: FlorianKempenich
-  password:
-    secure: mrWRbn0gZeH1yz4iaPmtPP1nCHZVlLXtoL555Z4ZlmLMWF4sSB37ILw0qJ8Dbq+B+IgPLpsz2ph6e5p4vT74+P5f++f/b/YcoNN9dOfInObGR+v1t6AKkpwLPcm8H9Vg9m/PYlXJnWjPQGawU6D33LnewtSZDyU1bTJ3cMiwam7YYkgHSIglLhaNMT19X4RB85yutnt4zSMcfFbt4M+alibx1YnDPJ3hv3pzhu0uXPD21adD8qRr2qKxHwmRGuNuKKrfLy6Wtkou275fZyOQjCJynmzL24VR8PULE2sPhZdlqp8qrOvmWiY5AY/3ReSkeahzQGkikaC+6/zLsgWljN6t/A2gusyVtRuesxJF2UfPfxqo0UYMhaq69lfYXesHHce/prm2nxXg5nafUZYXxe+rJgVxtKFIZvZJSk2JZFGAsxzi3GgSIk0bPNCkbDo9nhqxKYdsSG7kGwt4JOZXsh3XujaSWVrDj+TO4F7vQV+qdCg4sMJU+ONuHW1z1Q5zGpvB+oj9Ma/46oUev+8XlhYD4721FRTgcI8BsiyV3J6+aPxlaj2XjRFDmbcnHeePojo4Qb0udLwiyI7VG+L6sH4ibKYo557edY/OdogOX/rm1EPX/nBC0iY9trabMV0RS1xRrnm9/46BacYFFdM+pqCB+/yujxt9mhATlNjxVFQ=
-  on:
-    tags: true
+jobs:
+  include:
+
+    - stage: test
+      python:
+         - '3.6'
+         - '3.7-dev'
+      install: pip install tox-travis
+      script: tox
+
+    - stage: deploy
+      script: skip
+      python:
+         - '3.7-dev'
+      deploy:
+        provider: pypi
+        user: FlorianKempenich
+        password:
+          secure: mrWRbn0gZeH1yz4iaPmtPP1nCHZVlLXtoL555Z4ZlmLMWF4sSB37ILw0qJ8Dbq+B+IgPLpsz2ph6e5p4vT74+P5f++f/b/YcoNN9dOfInObGR+v1t6AKkpwLPcm8H9Vg9m/PYlXJnWjPQGawU6D33LnewtSZDyU1bTJ3cMiwam7YYkgHSIglLhaNMT19X4RB85yutnt4zSMcfFbt4M+alibx1YnDPJ3hv3pzhu0uXPD21adD8qRr2qKxHwmRGuNuKKrfLy6Wtkou275fZyOQjCJynmzL24VR8PULE2sPhZdlqp8qrOvmWiY5AY/3ReSkeahzQGkikaC+6/zLsgWljN6t/A2gusyVtRuesxJF2UfPfxqo0UYMhaq69lfYXesHHce/prm2nxXg5nafUZYXxe+rJgVxtKFIZvZJSk2JZFGAsxzi3GgSIk0bPNCkbDo9nhqxKYdsSG7kGwt4JOZXsh3XujaSWVrDj+TO4F7vQV+qdCg4sMJU+ONuHW1z1Q5zGpvB+oj9Ma/46oUev+8XlhYD4721FRTgcI8BsiyV3J6+aPxlaj2XjRFDmbcnHeePojo4Qb0udLwiyI7VG+L6sH4ibKYo557edY/OdogOX/rm1EPX/nBC0iY9trabMV0RS1xRrnm9/46BacYFFdM+pqCB+/yujxt9mhATlNjxVFQ=
+        on:
+          tags: true
