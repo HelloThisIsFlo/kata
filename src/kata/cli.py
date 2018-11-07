@@ -23,7 +23,6 @@ def cli(github_user, repo, path):
     click.echo(f" - Repo: '{repo}'")
     click.echo(f" - Path: '{path}'")
     click.echo('')
-    repo_obj._format_result()
     result = repo_obj.file_urls(github_user, repo, path)
     pprint(result)
     click.echo('')
