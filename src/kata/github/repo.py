@@ -15,8 +15,13 @@ class Repo:
         :param path: Path in the Repo
         :return: Flat list of all files recursively found along with their download URLs
         """
-        contents = self.api.contents(user, repo, path)
-        return self.format_result(contents)
+        result = self.api.contents(user, repo, path)
+
+        if result[0]['type'] == 'dir':
+            dir_name = result[0]['name']
+            result = self.api.contents(user, repo, dir_name)
+
+        return self.format_result(result)
 
     def format_result(self, contents):
         return [{
