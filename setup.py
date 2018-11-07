@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 def readme():
@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='kata',
-    version='0.0.2',
+    version='0.0.3',
     description='Kata made easy: A TDD setup in the language of your choice in a single command',
     long_description=readme(),
     keywords='test tdd kata clean-code softwarecraft',
@@ -22,11 +22,13 @@ setup(
     url='https://floriankempenich.github.io/kata',
     author='Florian Kempenich',
     author_email='Flori@nKempenich.com',
-    packages=['src/kata'],
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     license='MIT',
     scripts=['bin/kata'],
     install_requires=[
-        'click'
+        'click',
+        'requests'
     ],
     include_package_data=True
 )
