@@ -58,6 +58,34 @@ def mock_api():
                 'another_dir': [mock_file_entry('another_dir/a_file.txt'),
                                 mock_file_entry('another_dir/another_file.py'),
                                 mock_file_entry('another_dir/some_other_file.md')]
+            },
+            'multiple_directories_one_is_empty': {
+                '': [mock_dir_entry('some_dir'),
+                     mock_dir_entry('empty_dir')],
+                'some_dir': [mock_file_entry('some_dir/a_file.txt'),
+                             mock_file_entry('some_dir/another_file.py'),
+                             mock_file_entry('some_dir/a_third_file.md')],
+                'empty_dir': []
+            },
+            'mix_of_files_and_directory': {
+                '': [mock_file_entry('a_file.txt'),
+                     mock_dir_entry('some_dir')],
+                'some_dir': [mock_file_entry('some_dir/a_file.txt'),
+                             mock_file_entry('some_dir/another_file.py')]
+
+            },
+            'nested_directories': {
+                '':
+                    [mock_file_entry('file_at_root.txt'),
+                     mock_dir_entry('dir_at_root')],
+                'dir_at_root':
+                    [mock_file_entry('dir_at_root/file_at_level_1.txt'),
+                     mock_dir_entry('dir_at_root/dir_at_level_1')],
+                'dir_at_root/dir_at_level_1':
+                    [mock_file_entry('dir_at_root/dir_at_level_1/file_at_level_2.txt'),
+                     mock_dir_entry('dir_at_root/dir_at_level_1/dir_at_level_2')],
+                'dir_at_root/dir_at_level_1/dir_at_level_2':
+                    [mock_file_entry('dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt')]
             }
         }
 
@@ -146,7 +174,6 @@ class TestScenarios:
                 'download_url': 'https://github_url_for/some_dir/a_third_file.md'
             }]
 
-    @pytest.mark.skip
     def test_multiple_directories_containing_files(self, repo_with_scenario):
         # Given: A repo containing multiple dirs, themselves containing files | See: `mocked_contents_scenarios`
         repo_with_scenario.init_scenario('multiple_directories_containing_files')
@@ -181,9 +208,90 @@ class TestScenarios:
                 'download_url': 'https://github_url_for/another_dir/some_other_file.md'
             }]
 
-    # TODO: Tests to add:
-    # - Multiple dir => Concatenate results
-    # - Empty dir => Ignore
-    # - Mixed files & dir => Flatten the file hierarchy
-    # - Nested dir => Flatten the file hierarchy
-    # - Path isn't root
+    def test_multiple_directories_one_is_empty(self, repo_with_scenario):
+        # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
+        repo_with_scenario.init_scenario('multiple_directories_one_is_empty')
+
+        # When: Fetching the root path: ''
+        result = repo_with_scenario.file_urls(path='')
+
+        # Then: Empty dir is ignored
+        assert result == [
+            {
+                'file_path': 'some_dir/a_file.txt',
+                'download_url': 'https://github_url_for/some_dir/a_file.txt'
+            },
+            {
+                'file_path': 'some_dir/another_file.py',
+                'download_url': 'https://github_url_for/some_dir/another_file.py'
+            },
+            {
+                'file_path': 'some_dir/a_third_file.md',
+                'download_url': 'https://github_url_for/some_dir/a_third_file.md'
+            }]
+
+    def test_mix_of_files_and_directory(self, repo_with_scenario):
+        # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
+        repo_with_scenario.init_scenario('mix_of_files_and_directory')
+
+        # When: Fetching the root path: ''
+        result = repo_with_scenario.file_urls(path='')
+
+        # Then: Files hierarchy is flattened
+        assert result == [
+            {
+                'file_path': 'a_file.txt',
+                'download_url': 'https://github_url_for/a_file.txt'
+            },
+            {
+                'file_path': 'some_dir/a_file.txt',
+                'download_url': 'https://github_url_for/some_dir/a_file.txt'
+            },
+            {
+                'file_path': 'some_dir/another_file.py',
+                'download_url': 'https://github_url_for/some_dir/another_file.py'
+            }]
+
+    def test_nested_directories(self, repo_with_scenario):
+        # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
+        repo_with_scenario.init_scenario('nested_directories')
+
+        # When: Fetching the root path: ''
+        result = repo_with_scenario.file_urls(path='')
+
+        # Then: Files hierarchy is flattened
+        assert result == [
+            {
+                'file_path': 'file_at_root.txt',
+                'download_url': 'https://github_url_for/file_at_root.txt'
+            },
+            {
+                'file_path': 'dir_at_root/file_at_level_1.txt',
+                'download_url': 'https://github_url_for/dir_at_root/file_at_level_1.txt'
+            },
+            {
+                'file_path': 'dir_at_root/dir_at_level_1/file_at_level_2.txt',
+                'download_url': 'https://github_url_for/dir_at_root/dir_at_level_1/file_at_level_2.txt'
+            },
+            {
+                'file_path': 'dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt',
+                'download_url': 'https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
+            }]
+
+    def test_nested_directories_path_isn_t_root(self, repo_with_scenario):
+        # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
+        repo_with_scenario.init_scenario('nested_directories')
+
+        # When: Fetching the root path: ''
+        result = repo_with_scenario.file_urls(path='dir_at_root/dir_at_level_1')
+
+        # Then: Files hierarchy is flattened
+        assert result == [
+            {
+                'file_path': 'dir_at_root/dir_at_level_1/file_at_level_2.txt',
+                'download_url': 'https://github_url_for/dir_at_root/dir_at_level_1/file_at_level_2.txt'
+            },
+            {
+                'file_path': 'dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt',
+                'download_url': 'https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
+            }]

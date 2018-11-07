@@ -15,15 +15,28 @@ class Repo:
         :param path: Path in the Repo
         :return: Flat list of all files recursively found along with their download URLs
         """
-        result = self.api.contents(user, repo, path)
+        files = self.get_files_in_dir(user, repo, path)
+        return self.format_result(files)
 
-        if result[0]['type'] == 'dir':
-            dir_name = result[0]['name']
-            result = self.api.contents(user, repo, dir_name)
+    def get_files_in_dir(self, user, repo, dir_path):
+        # TODO: Implement using multi-threading (add 0.5 sec delay in fake repo for dev purposes, remove then)
+        dir_contents = self.api.contents(user, repo, dir_path)
 
-        return self.format_result(result)
+        def filter_by_type(contents, content_type):
+            return [entry for entry in contents if entry['type'] == content_type]
 
-    def format_result(self, contents):
+        files = filter_by_type(dir_contents, 'file')
+        sub_dirs = filter_by_type(dir_contents, 'dir')
+
+        for sub_dir in sub_dirs:
+            sub_dir_path = f"{dir_path}/{sub_dir['name']}".lstrip('/')
+            sub_dir_files = self.get_files_in_dir(user, repo, sub_dir_path)
+            files += sub_dir_files
+
+        return files
+
+    @staticmethod
+    def format_result(contents):
         return [{
             'file_path': file['path'],
             'download_url': file['download_url']

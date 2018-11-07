@@ -1,7 +1,8 @@
 #!/bin/bash
 
 USER=FlorianKempenich
-REPO=ansible-role-python-virtualenv
+# REPO=ansible-role-python-virtualenv
+REPO=My-Java-Archetype
 URL=https://api.github.com/repos/$USER/$REPO/contents
 
 FILE_PATH="$1"
