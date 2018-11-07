@@ -18,10 +18,10 @@ class Repo:
         :param path: Path in the Repo
         :return: Flat list of all files recursively found along with their download URLs
         """
-        files = self.get_files_in_dir(user, repo, path)
-        return self.format_result(files)
+        files = self._get_files_in_dir(user, repo, path)
+        return self._format_result(files)
 
-    def get_files_in_dir(self, user, repo, dir_path):
+    def _get_files_in_dir(self, user, repo, dir_path):
         def filter_by_type(contents, content_type):
             return [entry for entry in contents if entry['type'] == content_type]
 
@@ -29,7 +29,7 @@ class Repo:
             sub_dir_files_futures = []
             for sub_dir in sub_dirs:
                 sub_dir_path = f"{dir_path}/{sub_dir['name']}".lstrip('/')
-                sub_dir_files_future = self.executor.submit(self.get_files_in_dir, user, repo, sub_dir_path)
+                sub_dir_files_future = self.executor.submit(self._get_files_in_dir, user, repo, sub_dir_path)
                 sub_dir_files_futures += [sub_dir_files_future]
 
             all_sub_dir_files = []
@@ -45,7 +45,7 @@ class Repo:
         return files + get_files_in_all_sub_dirs_async()
 
     @staticmethod
-    def format_result(contents):
+    def _format_result(contents):
         return [{
             'file_path': file['path'],
             'download_url': file['download_url']
