@@ -1,6 +1,7 @@
 from concurrent import futures
 
 from .api import Api
+from ..models import DownloadableFile
 
 
 class Repo:
@@ -46,7 +47,8 @@ class Repo:
 
     @staticmethod
     def _format_result(contents):
-        return [{
-            'file_path': file['path'],
-            'download_url': file['download_url']
-        } for file in contents]
+        return [
+            DownloadableFile(
+                file_path=file['path'],
+                download_url=file['download_url']
+            ) for file in contents]

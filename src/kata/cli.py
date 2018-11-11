@@ -13,8 +13,8 @@ from .io.github.repo import Repo
 @click.argument('repo')
 @click.argument('path', default='')
 def cli(github_user, repo, path):
-    # explore_repo(github_user, repo, path)
-    print_current_dir()
+    explore_repo(github_user, repo, path)
+    # print_current_dir()
 
 
 def explore_repo(github_user, repo, path):
