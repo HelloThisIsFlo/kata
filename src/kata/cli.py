@@ -4,8 +4,8 @@ from pprint import pprint
 
 import click
 
-from .github.api import Api
-from .github.repo import Repo
+from .io.github.api import Api
+from .io.github.repo import Repo
 
 
 @click.command()

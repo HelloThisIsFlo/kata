@@ -6,8 +6,8 @@ from pprint import pprint
 import pytest
 import requests
 
-from src.kata.github.api import Api
-from src.kata.github.repo import Repo
+from src.kata.io.github.api import Api
+from src.kata.io.github.repo import Repo
 
 
 @pytest.mark.skip

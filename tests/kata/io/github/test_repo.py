@@ -2,7 +2,7 @@ from concurrent import futures
 
 import pytest
 
-from src.kata.github.repo import Repo
+from src.kata.io.github.repo import Repo
 
 NOT_USED = 'Not Used'
 
