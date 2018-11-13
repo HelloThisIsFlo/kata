@@ -1,4 +1,5 @@
 from concurrent import futures
+from pathlib import Path
 from typing import List
 
 import pytest
@@ -141,15 +142,15 @@ class TestScenarios:
         # Then: List all the files
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path='a_file.txt',
+                file_path=Path('a_file.txt'),
                 download_url='https://github_url_for/a_file.txt'
             ),
             DownloadableFile(
-                file_path='another_file.py',
+                file_path=Path('another_file.py'),
                 download_url='https://github_url_for/another_file.py'
             ),
             DownloadableFile(
-                file_path='a_third_file.md',
+                file_path=Path('a_third_file.md'),
                 download_url='https://github_url_for/a_third_file.md'
             )])
 
@@ -163,15 +164,15 @@ class TestScenarios:
         # Then: List all the files recursively found
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path='some_dir/a_file.txt',
+                file_path=Path('some_dir/a_file.txt'),
                 download_url='https://github_url_for/some_dir/a_file.txt'
             ),
             DownloadableFile(
-                file_path='some_dir/another_file.py',
+                file_path=Path('some_dir/another_file.py'),
                 download_url='https://github_url_for/some_dir/another_file.py'
             ),
             DownloadableFile(
-                file_path='some_dir/a_third_file.md',
+                file_path=Path('some_dir/a_third_file.md'),
                 download_url='https://github_url_for/some_dir/a_third_file.md'
             )])
 
@@ -185,27 +186,27 @@ class TestScenarios:
         # Then: List all the files recursively found
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path='some_dir/a_file.txt',
+                file_path=Path('some_dir/a_file.txt'),
                 download_url='https://github_url_for/some_dir/a_file.txt'
             ),
             DownloadableFile(
-                file_path='some_dir/another_file.py',
+                file_path=Path('some_dir/another_file.py'),
                 download_url='https://github_url_for/some_dir/another_file.py'
             ),
             DownloadableFile(
-                file_path='some_dir/a_third_file.md',
+                file_path=Path('some_dir/a_third_file.md'),
                 download_url='https://github_url_for/some_dir/a_third_file.md'
             ),
             DownloadableFile(
-                file_path='another_dir/a_file.txt',
+                file_path=Path('another_dir/a_file.txt'),
                 download_url='https://github_url_for/another_dir/a_file.txt'
             ),
             DownloadableFile(
-                file_path='another_dir/another_file.py',
+                file_path=Path('another_dir/another_file.py'),
                 download_url='https://github_url_for/another_dir/another_file.py'
             ),
             DownloadableFile(
-                file_path='another_dir/some_other_file.md',
+                file_path=Path('another_dir/some_other_file.md'),
                 download_url='https://github_url_for/another_dir/some_other_file.md'
             )])
 
@@ -219,15 +220,15 @@ class TestScenarios:
         # Then: Empty dir is ignored
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path='some_dir/a_file.txt',
+                file_path=Path('some_dir/a_file.txt'),
                 download_url='https://github_url_for/some_dir/a_file.txt'
             ),
             DownloadableFile(
-                file_path='some_dir/another_file.py',
+                file_path=Path('some_dir/another_file.py'),
                 download_url='https://github_url_for/some_dir/another_file.py'
             ),
             DownloadableFile(
-                file_path='some_dir/a_third_file.md',
+                file_path=Path('some_dir/a_third_file.md'),
                 download_url='https://github_url_for/some_dir/a_third_file.md'
             )])
 
@@ -241,15 +242,15 @@ class TestScenarios:
         # Then: Files hierarchy is flattened
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path='a_file.txt',
+                file_path=Path('a_file.txt'),
                 download_url='https://github_url_for/a_file.txt'
             ),
             DownloadableFile(
-                file_path='some_dir/a_file.txt',
+                file_path=Path('some_dir/a_file.txt'),
                 download_url='https://github_url_for/some_dir/a_file.txt'
             ),
             DownloadableFile(
-                file_path='some_dir/another_file.py',
+                file_path=Path('some_dir/another_file.py'),
                 download_url='https://github_url_for/some_dir/another_file.py'
             )])
 
@@ -263,19 +264,19 @@ class TestScenarios:
         # Then: Files hierarchy is flattened
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path='file_at_root.txt',
+                file_path=Path('file_at_root.txt'),
                 download_url='https://github_url_for/file_at_root.txt'
             ),
             DownloadableFile(
-                file_path='dir_at_root/file_at_level_1.txt',
+                file_path=Path('dir_at_root/file_at_level_1.txt'),
                 download_url='https://github_url_for/dir_at_root/file_at_level_1.txt'
             ),
             DownloadableFile(
-                file_path='dir_at_root/dir_at_level_1/file_at_level_2.txt',
+                file_path=Path('dir_at_root/dir_at_level_1/file_at_level_2.txt'),
                 download_url='https://github_url_for/dir_at_root/dir_at_level_1/file_at_level_2.txt'
             ),
             DownloadableFile(
-                file_path='dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt',
+                file_path=Path('dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'),
                 download_url='https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
             )])
 
@@ -289,10 +290,10 @@ class TestScenarios:
         # Then: Files hierarchy is flattened
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path='dir_at_root/dir_at_level_1/file_at_level_2.txt',
+                file_path=Path('dir_at_root/dir_at_level_1/file_at_level_2.txt'),
                 download_url='https://github_url_for/dir_at_root/dir_at_level_1/file_at_level_2.txt'
             ),
             DownloadableFile(
-                file_path='dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt',
+                file_path=Path('dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'),
                 download_url='https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
             )])
