@@ -1,9 +1,12 @@
-import os
-from concurrent import futures
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from pprint import pprint
+from typing import List
 
 import click
 
+from kata.io.downloader import Downloader
+from kata.io.models import DownloadableFile
 from .io.github.api import Api
 from .io.github.repo import Repo
 
@@ -11,32 +14,39 @@ from .io.github.repo import Repo
 @click.command()
 @click.argument('github_user')
 @click.argument('repo')
-@click.argument('path', default='')
-def cli(github_user, repo, path):
-    explore_repo(github_user, repo, path)
-    # print_current_dir()
+@click.argument('sub_path_in_repo', default='')
+def cli(github_user, repo, sub_path_in_repo):
+    main = Main()
+    # main.explore_github_repo(user=github_user, repo_name=repo, sub_path_in_repo=sub_path_in_repo)
+    main.download_github_repo(user=github_user, repo_name=repo, sub_path_in_repo=sub_path_in_repo)
 
 
-def explore_repo(github_user, repo, path):
-    thread_pool_executor = futures.ThreadPoolExecutor(100, thread_name_prefix='subdir-explorer-')
-    api = Api()
-    repo_obj = Repo(api, thread_pool_executor)
+class Main:
+    def __init__(self):
+        self._executor = ThreadPoolExecutor(100)
+        self._api = Api()
+        self._repo_explorer = Repo(self._api, self._executor)
+        self._downloader = Downloader(self._api)
 
-    click.echo('Debug - Print all files in repo')
-    click.echo('')
-    click.echo('Exploring:')
-    click.echo(f" - User: '{github_user}'")
-    click.echo(f" - Repo: '{repo}'")
-    click.echo(f" - Path: '{path}'")
-    click.echo('')
-    result = repo_obj.file_urls(github_user, repo, path)
-    pprint(result)
-    click.echo('')
-    click.echo('Done')
+    def explore_github_repo(self, user, repo_name, sub_path_in_repo):
+        click.echo('Debug - Print all files in repo')
+        click.echo('')
+        click.echo('Exploring:')
+        click.echo(f" - User: '{user}'")
+        click.echo(f" - Repo: '{repo_name}'")
+        click.echo(f" - SubPath in Repo: '{sub_path_in_repo}'")
+        click.echo('')
+        result = self._repo_explorer.file_urls(user, repo_name, sub_path_in_repo)
+        pprint(result)
+        click.echo('')
+        click.echo('Done')
 
+    def download_github_repo(self, user, repo_name, sub_path_in_repo):
+        sandbox = Path('./sandbox')
+        sandbox.mkdir(exist_ok=True)
+        click.echo(f'Sandbox: {sandbox.absolute()}')
 
-def print_current_dir():
-    click.echo("Printing current dir:")
-    cwd = os.getcwd()
-    click.echo(cwd)
-    click.echo("Done")
+        repo_files: List[DownloadableFile] = self._repo_explorer.file_urls(user, repo_name, sub_path_in_repo)
+        click.echo('Finished fetching the list. Writing to drive now')
+        self._downloader.download_file_at_location(sandbox, repo_files)
+        click.echo('Done! (probably ^_^)')

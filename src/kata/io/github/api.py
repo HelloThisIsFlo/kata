@@ -15,13 +15,13 @@ class Api:
             url += f'/{path}'
 
         response = self._get_url(url)
-        # TODO: Maybe throw exceptions if not `200` or if specifically `404`/'Not Found'
         return response.json()
 
     def download_raw_text_file(self, raw_text_file_url: str):
-        # self.get_url('')
-        raise NotImplementedError()
+        response = self._get_url(raw_text_file_url)
+        return response.text
 
     def _get_url(self, url: str):
         response = self._requests.get(url)
+        response.raise_for_status()
         return response

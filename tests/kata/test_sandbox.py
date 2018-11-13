@@ -36,6 +36,18 @@ SANDBOX_DIR = '../sandbox'
 
 
 @pytest.mark.skip
+def test_invalid_file():
+    res = requests.get('https://raw.githubusercontent.com/asdf')
+    res = requests.get(
+        'https://raw.githubusercontent.com/FlorianKempenich/kata/master/R.sdfasdfasdmd')
+    res.raise_for_status()
+    # res = requests.get('asdfadsf')
+
+    print(res)
+    print(res.text)
+
+
+@pytest.mark.skip
 def test_write_subpath():
     def write_sandbox_file(path_relative_to_sandbox_root, content):
         def create_dir_hierarchy_if_does_not_exist():
@@ -58,3 +70,12 @@ def test_write_subpath():
 
         Is it working?
         """))
+
+
+@pytest.mark.skip
+def test_debug():
+    api = Api()
+    file_contents = api.download_raw_text_file(
+        'https://raw.githubusercontent.com/FlorianKempenich/kata/master/bin/kata')
+
+    print(file_contents)

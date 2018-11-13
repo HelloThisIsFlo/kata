@@ -12,6 +12,7 @@ class Downloader:
     def download_file_at_location(self, root_dir: Path, files_to_download: List[DownloadableFile]) -> None:
         # Note: No need to implement multi-threading here
         # => A lot of complexity (IO access to the drive) vs 0 perf gain.
+        # EDIT: Actually totally wrong !! --> Completely forgot about the 'download' part.
         if not root_dir.exists() or not root_dir.is_dir():
             raise ValueError(f"Root dir '{root_dir}' isn't a valid directory")
 
