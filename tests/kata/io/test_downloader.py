@@ -19,8 +19,8 @@ def mock_api(mocked_api):
 
 
 @pytest.fixture
-def downloader(mock_api):
-    return Downloader(mock_api)
+def downloader(mock_api, thread_pool_executor):
+    return Downloader(mock_api, thread_pool_executor)
 
 
 class TestSingleFile:
@@ -43,7 +43,7 @@ class TestSingleFile:
             self._mock_api.download_raw_text_file.side_effect = return_file_content_only_for_correct_url
 
             # When: Downloading file at location
-            self._downloader.download_file_at_location(root_dir, [file_to_download])
+            self._downloader.download_files_at_location(root_dir, [file_to_download])
 
             # Then: File was downloaded and saved w/ correct content
             expected_file_path = root_dir / file_to_download.file_path
@@ -124,7 +124,7 @@ class TestMultipleFiles:
 
         # WHEN: Downloading all files
         root_dir = tmp_path
-        downloader.download_file_at_location(root_dir=root_dir, files_to_download=files_to_download)
+        downloader.download_files_at_location(root_dir=root_dir, files_to_download=files_to_download)
 
         # THEN: All files have been correctly downloaded
         def assert_file_at_path_has_content(file_path: Path, expected_content: str):
@@ -148,7 +148,7 @@ class TestEdgeCases:
     def test_empty_list(self, tmp_path: Path, downloader: Downloader):
         root_dir = tmp_path
         empty_list = []
-        downloader.download_file_at_location(root_dir, empty_list)
+        downloader.download_files_at_location(root_dir, empty_list)
         for _ in root_dir.iterdir():
             pytest.fail('root_dir should be empty but was not!!')
 
@@ -161,8 +161,8 @@ class TestEdgeCases:
         # When: Trying to download files
         # Then: An exception is raised
         with pytest.raises(ValueError) as raised_exception:
-            downloader.download_file_at_location(root_dir,
-                                                 [DownloadableFile(Path('file.txt'), 'http://url.com/file.txt')])
+            downloader.download_files_at_location(root_dir,
+                                                  [DownloadableFile(Path('file.txt'), 'http://url.com/file.txt')])
         assert raised_exception.match("Root dir 'this/does/not/exist' isn't a valid directory")
 
     def test_root_dir_isn_t_a_dir(self, tmp_path: Path, mock_api: Api, downloader: Downloader):
@@ -175,7 +175,7 @@ class TestEdgeCases:
         # When: Trying to download files
         # Then: An exception is raised
         with pytest.raises(ValueError) as raised_exception:
-            downloader.download_file_at_location(root_dir=not_a_dir,
-                                                 files_to_download=[
-                                                     DownloadableFile(Path('file.txt'), 'http://url.com/file.txt')])
+            downloader.download_files_at_location(root_dir=not_a_dir,
+                                                  files_to_download=[
+                                                      DownloadableFile(Path('file.txt'), 'http://url.com/file.txt')])
         assert raised_exception.match(r"Root dir '.*not_a_dir' isn't a valid directory")

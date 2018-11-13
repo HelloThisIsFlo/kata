@@ -1,13 +1,24 @@
 import textwrap
 from concurrent import futures
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from pprint import pprint
 
 import pytest
 import requests
 
+from kata.io.downloader import Downloader
 from src.kata.io.github.api import Api
 from src.kata.io.github.repo import Repo
+
+
+class SandboxHelper:
+    def __init__(self):
+        self.executor = ThreadPoolExecutor(100)
+        self.api = Api()
+        self.repo_explorer = Repo(self.api, self.executor)
+        self.downloader = Downloader(self.api, self.executor)
+        self.sandbox_dir = Path('../sandbox')
 
 
 @pytest.mark.skip
@@ -30,9 +41,6 @@ def test_download_raw_file():
         'https://raw.githubusercontent.com/FlorianKempenich/kata/master/README.md')
 
     print(res.text)
-
-
-SANDBOX_DIR = '../sandbox'
 
 
 @pytest.mark.skip
@@ -73,9 +81,16 @@ def test_write_subpath():
 
 
 @pytest.mark.skip
-def test_debug():
-    api = Api()
-    file_contents = api.download_raw_text_file(
-        'https://raw.githubusercontent.com/FlorianKempenich/kata/master/bin/kata')
+def test_for_loop_scope():
+    some_numbers = [1, 3, 5]
+    for number in some_numbers:
+        declared_inside_loop = number
+        print(f'In loop | number = {number}')
 
-    print(file_contents)
+    last_number = some_numbers[-1]
+    assert declared_inside_loop == last_number
+
+    # for
+    # helper = SandboxHelper()
+    # helper.downloader.download_file_at_location()
+    # downloader = Downloader(Api(), ThreadP)

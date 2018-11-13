@@ -26,7 +26,7 @@ class Main:
         self._executor = ThreadPoolExecutor(100)
         self._api = Api()
         self._repo_explorer = Repo(self._api, self._executor)
-        self._downloader = Downloader(self._api)
+        self._downloader = Downloader(self._api, self._executor)
 
     def explore_github_repo(self, user, repo_name, sub_path_in_repo):
         click.echo('Debug - Print all files in repo')
@@ -48,5 +48,5 @@ class Main:
 
         repo_files: List[DownloadableFile] = self._repo_explorer.file_urls(user, repo_name, sub_path_in_repo)
         click.echo('Finished fetching the list. Writing to drive now')
-        self._downloader.download_file_at_location(sandbox, repo_files)
+        self._downloader.download_files_at_location(sandbox, repo_files)
         click.echo('Done! (probably ^_^)')

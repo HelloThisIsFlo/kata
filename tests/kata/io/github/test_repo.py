@@ -1,4 +1,3 @@
-from concurrent import futures
 from pathlib import Path
 from typing import List
 
@@ -104,8 +103,7 @@ def mock_api():
 
 
 @pytest.fixture
-def repo(mock_api):
-    thread_pool_executor = futures.ThreadPoolExecutor(100, thread_name_prefix='subdir-explorer-')
+def repo(mock_api, thread_pool_executor):
     return Repo(mock_api, thread_pool_executor)
 
 
