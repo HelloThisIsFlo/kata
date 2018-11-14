@@ -3,7 +3,7 @@ from concurrent.futures import Executor
 from pathlib import Path
 from typing import List, NamedTuple
 
-from .github.api import Api
+from .github.api import GithubApi
 from ..models import DownloadableFile
 
 
@@ -13,7 +13,7 @@ class _DownloadedFile(NamedTuple):
 
 
 class Downloader:
-    def __init__(self, api: Api, executor: Executor):
+    def __init__(self, api: GithubApi, executor: Executor):
         self._api = api
         self._executor = executor
 

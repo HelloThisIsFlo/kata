@@ -1,7 +1,7 @@
 import requests
 
 
-class Api:
+class GithubApi:
     """
     Basic wrapper around the Github Api
     """

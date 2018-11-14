@@ -8,15 +8,15 @@ import pytest
 import requests
 
 from kata.io.downloader import Downloader
-from src.kata.io.github.api import Api
-from src.kata.io.github.repo import Repo
+from src.kata.io.github.api import GithubApi
+from src.kata.io.github.repo import GithubRepo
 
 
 class SandboxHelper:
     def __init__(self):
         self.executor = ThreadPoolExecutor(100)
-        self.api = Api()
-        self.repo_explorer = Repo(self.api, self.executor)
+        self.api = GithubApi()
+        self.repo_explorer = GithubRepo(self.api, self.executor)
         self.downloader = Downloader(self.api, self.executor)
         self.sandbox_dir = Path('../sandbox')
 
@@ -28,8 +28,8 @@ def test_explore_repo():
     repo_name = 'My-Java-Archetype'
     path = ''
     thread_pool_executor = futures.ThreadPoolExecutor(100, thread_name_prefix='subdir-explorer-')
-    api = Api()
-    repo = Repo(api, thread_pool_executor)
+    api = GithubApi()
+    repo = GithubRepo(api, thread_pool_executor)
 
     result = repo.file_urls(github_user, repo_name, path)
     pprint(result)

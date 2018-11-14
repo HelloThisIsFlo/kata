@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 
-from src.kata.io.github.repo import Repo
+from src.kata.io.github.repo import GithubRepo
 from kata.models import DownloadableFile
 
 NOT_USED = 'Not Used'
@@ -104,7 +104,7 @@ def mock_api():
 
 @pytest.fixture
 def repo(mock_api, thread_pool_executor):
-    return Repo(mock_api, thread_pool_executor)
+    return GithubRepo(mock_api, thread_pool_executor)
 
 
 def sort_by_file_path(files: List[DownloadableFile]):
