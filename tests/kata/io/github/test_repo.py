@@ -4,7 +4,7 @@ from typing import List
 import pytest
 
 from src.kata.io.github.repo import Repo
-from src.kata.io.models import DownloadableFile
+from kata.models import DownloadableFile
 
 NOT_USED = 'Not Used'
 

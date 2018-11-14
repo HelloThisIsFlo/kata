@@ -5,10 +5,10 @@ from typing import List
 
 import click
 
-from kata.io.downloader import Downloader
-from kata.io.models import DownloadableFile
+from .io.downloader import Downloader
 from .io.github.api import Api
 from .io.github.repo import Repo
+from .models import DownloadableFile
 
 
 @click.command()

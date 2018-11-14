@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, NamedTuple
 
 from .github.api import Api
-from .models import DownloadableFile
+from ..models import DownloadableFile
 
 
 class _DownloadedFile(NamedTuple):

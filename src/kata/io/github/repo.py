@@ -2,7 +2,7 @@ from concurrent import futures
 from pathlib import Path
 
 from .api import Api
-from ..models import DownloadableFile
+from ...models import DownloadableFile
 
 
 class Repo:

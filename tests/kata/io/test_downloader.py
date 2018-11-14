@@ -9,7 +9,7 @@ import pytest
 
 from src.kata.io.downloader import Downloader
 from src.kata.io.github.api import Api
-from src.kata.io.models import DownloadableFile
+from kata.models import DownloadableFile
 
 
 @pytest.fixture
