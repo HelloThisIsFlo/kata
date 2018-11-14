@@ -3,6 +3,7 @@
 
 Kata: A single command to get a ready to use TDD setup for your Kata, in your language of choice
 
+Templates for all Katas can be found: https://github.com/swkBerlin/kata-bootstraps
 
 
 ---
