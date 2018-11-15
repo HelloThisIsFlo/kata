@@ -1,13 +1,13 @@
 from concurrent import futures
 from pathlib import Path
 
-from .api import GithubApi
+from .api import Api
 from ...models import DownloadableFile
 
 
-class GithubRepo:
+class GRepo:
 
-    def __init__(self, api: GithubApi, executor: futures.Executor):
+    def __init__(self, api: Api, executor: futures.Executor):
         self._api = api
         self._executor = executor
 

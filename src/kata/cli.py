@@ -6,8 +6,8 @@ from typing import List
 import click
 
 from .io.downloader import Downloader
-from .io.github.api import GithubApi
-from .io.github.repo import GithubRepo
+from .io.github.api import Api
+from .io.github.grepo import GRepo
 from .models import DownloadableFile
 
 
@@ -24,8 +24,8 @@ def cli(github_user, repo, sub_path_in_repo):
 class Main:
     def __init__(self):
         self._executor = ThreadPoolExecutor(100)
-        self._api = GithubApi()
-        self._repo_explorer = GithubRepo(self._api, self._executor)
+        self._api = Api()
+        self._repo_explorer = GRepo(self._api, self._executor)
         self._downloader = Downloader(self._api, self._executor)
 
     def explore_github_repo(self, user, repo_name, sub_path_in_repo):
