@@ -5,10 +5,10 @@ from typing import List
 
 import click
 
-from kata.domain.downloader import Downloader
-from kata.io.network import GithubApi
-from kata.domain.grepo import GRepo
-from kata.domain.models import DownloadableFile
+from ..data.io.file import FileWriter
+from ..data.io.network import GithubApi
+from ..domain.grepo import GRepo
+from ..domain.models import DownloadableFile
 
 
 @click.command()
@@ -25,8 +25,8 @@ class Main:
     def __init__(self):
         self._executor = ThreadPoolExecutor(100)
         self._api = GithubApi()
-        self._repo_explorer = GRepo(self._api, self._executor)
-        self._downloader = Downloader(self._api, self._executor)
+        self._file_writer = FileWriter()
+        self._grepo = GRepo(self._api, self._file_writer, self._executor)
 
     def explore_github_repo(self, user, repo_name, sub_path_in_repo):
         click.echo('Debug - Print all files in repo')
@@ -36,7 +36,7 @@ class Main:
         click.echo(f" - Repo: '{repo_name}'")
         click.echo(f" - SubPath in Repo: '{sub_path_in_repo}'")
         click.echo('')
-        result = self._repo_explorer.get_file_urls(user, repo_name, sub_path_in_repo)
+        result = self._grepo.get_files_to_download(user, repo_name, sub_path_in_repo)
         pprint(result)
         click.echo('')
         click.echo('Done')
@@ -46,7 +46,7 @@ class Main:
         sandbox.mkdir(exist_ok=True)
         click.echo(f'Sandbox: {sandbox.absolute()}')
 
-        repo_files: List[DownloadableFile] = self._repo_explorer.get_file_urls(user, repo_name, sub_path_in_repo)
+        repo_files: List[DownloadableFile] = self._grepo.get_files_to_download(user, repo_name, sub_path_in_repo)
         click.echo('Finished fetching the list. Writing to drive now')
-        self._downloader.download_files_at_location(sandbox, repo_files)
+        self._grepo.download_files_at_location(sandbox, repo_files)
         click.echo('Done! (probably ^_^)')

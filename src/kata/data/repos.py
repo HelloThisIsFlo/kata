@@ -1,0 +1,2 @@
+class KataTemplateRepo:
+    pass

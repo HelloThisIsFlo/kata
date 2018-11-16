@@ -19,7 +19,7 @@ setup(
         'Topic :: Utilities',
         'Topic :: Software Development :: Testing'
     ],
-    url='https://floriankempenich.github.io/kata',
+    url='https://floriankempenich.github.data/kata',
     author='Florian Kempenich',
     author_email='Flori@nKempenich.com',
     packages=find_packages(where="src"),

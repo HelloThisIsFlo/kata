@@ -7,17 +7,15 @@ from pprint import pprint
 import pytest
 import requests
 
-from kata.domain.downloader import Downloader
-from kata.io.network import GithubApi
 from kata.domain.grepo import GRepo
+from kata.data.io.network import GithubApi
 
 
 class SandboxHelper:
     def __init__(self):
         self.executor = ThreadPoolExecutor(100)
         self.api = GithubApi()
-        self.repo_explorer = GRepo(self.api, self.executor)
-        self.downloader = Downloader(self.api, self.executor)
+        self.grepo = GRepo(self.api, self.executor)
         self.sandbox_dir = Path('../sandbox')
 
 
@@ -31,7 +29,7 @@ def test_explore_repo():
     api = GithubApi()
     repo = GRepo(api, thread_pool_executor)
 
-    result = repo.get_file_urls(github_user, repo_name, path)
+    result = repo.get_files_to_download(github_user, repo_name, path)
     pprint(result)
 
 
