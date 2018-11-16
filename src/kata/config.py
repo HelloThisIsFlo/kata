@@ -1,4 +1,2 @@
-KATA_GITHUB_REPO = {
-    'user': 'swkBerlin',
-    'repo': 'kata-bootstraps'
-}
+KATA_GITHUB_REPO_USER = 'swkBerlin'
+KATA_GITHUB_REPO_REPO = 'kata-bootstraps'
