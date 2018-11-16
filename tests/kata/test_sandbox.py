@@ -110,3 +110,17 @@ def test_kata_template_repo():
         KataTemplate('java', 'junit5'),
         KataTemplate('java', 'some-other')
     ]
+
+
+@pytest.mark.skip
+def test_raise_if_used():
+    class ShouldNeverBeUsed:
+        def __getattribute__(self, name):
+            raise NotImplementedError("This object/variable should never be used/access in this test")
+
+        def __str__(self):
+            raise NotImplementedError("This object/variable should never be used/access in this test")
+
+    a = ShouldNeverBeUsed()
+    # print(a)
+    print(a.test)
