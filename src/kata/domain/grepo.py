@@ -1,17 +1,17 @@
 from concurrent import futures
 from pathlib import Path
 
-from .api import Api
-from ...models import DownloadableFile
+from ..domain.models import DownloadableFile
+from ..io.network import GithubApi
 
 
 class GRepo:
 
-    def __init__(self, api: Api, executor: futures.Executor):
+    def __init__(self, api: GithubApi, executor: futures.Executor):
         self._api = api
         self._executor = executor
 
-    def file_urls(self, user, repo, path):
+    def get_file_urls(self, user, repo, path):
         """
         Explore recursively a repo and extract the file list
 

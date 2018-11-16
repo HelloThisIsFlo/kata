@@ -7,13 +7,13 @@ from unittest import mock
 
 import pytest
 
-from src.kata.io.downloader import Downloader
-from src.kata.io.github.api import Api
-from kata.models import DownloadableFile
+from src.kata.domain.downloader import Downloader
+from src.kata.domain.models import DownloadableFile
+from src.kata.io.network import GithubApi
 
 
 @pytest.fixture
-@mock.patch('src.kata.io.github.api.Api')
+@mock.patch('src.kata.io.network.GithubApi')
 def mock_api(mocked_api):
     return mocked_api
 
@@ -25,7 +25,7 @@ def downloader(mock_api, thread_pool_executor):
 
 class TestSingleFile:
     class SingleFileTestHelper:
-        def __init__(self, mock_api: Api, downloader: Downloader):
+        def __init__(self, mock_api: GithubApi, downloader: Downloader):
             self._mock_api = mock_api
             self._downloader = downloader
 
@@ -52,7 +52,7 @@ class TestSingleFile:
                 assert expected_file.read() == file_content
 
     @pytest.fixture
-    def single_file_test_helper(self, mock_api: Api, downloader: Downloader):
+    def single_file_test_helper(self, mock_api: GithubApi, downloader: Downloader):
         return TestSingleFile.SingleFileTestHelper(mock_api, downloader)
 
     def test_at_root(self, tmp_path: Path, single_file_test_helper):
@@ -95,7 +95,7 @@ class TestSingleFile:
 
 
 class TestMultipleFiles:
-    def test_diverse_multiple_files(self, tmp_path: Path, mock_api: Api, downloader: Downloader):
+    def test_diverse_multiple_files(self, tmp_path: Path, mock_api: GithubApi, downloader: Downloader):
         def return_file_content_for_correct_url(url):
             mock_content_for_url = {
                 'http://this_is_the_url/file_1.md': "CONTENT FOR 'file_1.md'",
@@ -142,7 +142,7 @@ class TestMultipleFiles:
 @pytest.mark.usefixtures('ensure_mock_api_isn_t_called')
 class TestEdgeCases:
     @pytest.fixture
-    def ensure_mock_api_isn_t_called(self, mock_api: Api):
+    def ensure_mock_api_isn_t_called(self, mock_api: GithubApi):
         mock_api.download_raw_text_file.side_effect = NotImplementedError
 
     def test_empty_list(self, tmp_path: Path, downloader: Downloader):
@@ -152,7 +152,7 @@ class TestEdgeCases:
         for _ in root_dir.iterdir():
             pytest.fail('root_dir should be empty but was not!!')
 
-    def test_root_dir_doesnt_exist(self, mock_api: Api, downloader: Downloader):
+    def test_root_dir_doesnt_exist(self, mock_api: GithubApi, downloader: Downloader):
         # Given: Root dir doesn't exist
 
         root_dir = Path('this/does/not/exist')
@@ -165,7 +165,7 @@ class TestEdgeCases:
                                                   [DownloadableFile(Path('file.txt'), 'http://url.com/file.txt')])
         assert raised_exception.match("Root dir 'this/does/not/exist' isn't a valid directory")
 
-    def test_root_dir_isn_t_a_dir(self, tmp_path: Path, mock_api: Api, downloader: Downloader):
+    def test_root_dir_isn_t_a_dir(self, tmp_path: Path, mock_api: GithubApi, downloader: Downloader):
         # Given: Root dir isn't a 'directory'
         not_a_dir = tmp_path / 'not_a_dir'
         with not_a_dir.open('w') as file:

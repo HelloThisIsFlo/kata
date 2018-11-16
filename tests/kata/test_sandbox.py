@@ -7,15 +7,15 @@ from pprint import pprint
 import pytest
 import requests
 
-from kata.io.downloader import Downloader
-from src.kata.io.github.api import Api
-from src.kata.io.github.grepo import GRepo
+from kata.domain.downloader import Downloader
+from kata.io.network import GithubApi
+from kata.domain.grepo import GRepo
 
 
 class SandboxHelper:
     def __init__(self):
         self.executor = ThreadPoolExecutor(100)
-        self.api = Api()
+        self.api = GithubApi()
         self.repo_explorer = GRepo(self.api, self.executor)
         self.downloader = Downloader(self.api, self.executor)
         self.sandbox_dir = Path('../sandbox')
@@ -28,10 +28,10 @@ def test_explore_repo():
     repo_name = 'My-Java-Archetype'
     path = ''
     thread_pool_executor = futures.ThreadPoolExecutor(100, thread_name_prefix='subdir-explorer-')
-    api = Api()
+    api = GithubApi()
     repo = GRepo(api, thread_pool_executor)
 
-    result = repo.file_urls(github_user, repo_name, path)
+    result = repo.get_file_urls(github_user, repo_name, path)
     pprint(result)
 
 
