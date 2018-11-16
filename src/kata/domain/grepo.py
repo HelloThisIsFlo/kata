@@ -32,8 +32,11 @@ class GRepo:
         return self._format_result(files)
 
     def download_files_at_location(self, root_dir: Path, files_to_download: List[DownloadableFile]) -> None:
-        if not root_dir.exists() or not root_dir.is_dir():
-            raise ValueError(f"Root dir '{root_dir}' isn't a valid directory")
+        if not root_dir.exists():
+            root_dir.mkdir()
+
+        if not root_dir.is_dir():
+            raise FileExistsError(f"Root dir '{root_dir}' is not a directory")
 
         download_file_futures = []
         for file_to_download in files_to_download:

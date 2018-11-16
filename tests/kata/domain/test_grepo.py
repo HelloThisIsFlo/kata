@@ -367,6 +367,16 @@ class TestDownloadFilesAtLocation:
             expected_written_file_path = root_dir / 'correct_name.txt'
             assert expected_written_file_path.exists()
 
+        def test_root_dir_doesnt_exist_then_create_it(self, tmp_path: Path, single_file_test_helper):
+            file = DownloadableFile(file_path=Path('this/is/a/sub_path/file.txt'),
+                                    download_url='http://this_is_the_url/this/is/a/sub_path/file.txt')
+
+            root_dir = tmp_path / 'does_not_exist_yet'
+            single_file_test_helper.test_file_is_downloaded_and_saved_with_correct_content(
+                root_dir=root_dir,
+                file_to_download=file,
+                file_content='EXPECTED TEXT CONTENT')
+
     class TestMultipleFiles:
         def test_diverse_multiple_files(self, tmp_path: Path, mock_api: GithubApi, grepo: GRepo):
             def return_file_content_for_correct_url(url):
@@ -425,19 +435,6 @@ class TestDownloadFilesAtLocation:
             for _ in root_dir.iterdir():
                 pytest.fail('root_dir should be empty but was not!!')
 
-        def test_root_dir_doesnt_exist(self, grepo: GRepo):
-            # Given: Root dir doesn't exist
-
-            root_dir = Path('this/does/not/exist')
-            assert not root_dir.exists()
-
-            # When: Trying to download files
-            # Then: An exception is raised
-            with pytest.raises(ValueError) as raised_exception:
-                grepo.download_files_at_location(root_dir,
-                                                 [DownloadableFile(Path('file.txt'), 'http://url.com/file.txt')])
-            assert raised_exception.match("Root dir 'this/does/not/exist' isn't a valid directory")
-
         def test_root_dir_isn_t_a_dir(self, tmp_path: Path, grepo: GRepo):
             # Given: Root dir isn't a 'directory'
             not_a_dir = tmp_path / 'not_a_dir'
@@ -447,8 +444,8 @@ class TestDownloadFilesAtLocation:
 
             # When: Trying to download files
             # Then: An exception is raised
-            with pytest.raises(ValueError) as raised_exception:
+            with pytest.raises(FileExistsError) as raised_exception:
                 grepo.download_files_at_location(root_dir=not_a_dir,
                                                  files_to_download=[DownloadableFile(Path('file.txt'),
                                                                                      'http://url.com/file.txt')])
-            assert raised_exception.match(r"Root dir '.*not_a_dir' isn't a valid directory")
+            assert raised_exception.match(r"Root dir '.*not_a_dir' is not a directory")
