@@ -7,8 +7,10 @@ from pprint import pprint
 import pytest
 import requests
 
-from kata.domain.grepo import GRepo
 from kata.data.io.network import GithubApi
+from kata.data.repos import KataTemplateRepo
+from kata.domain.grepo import GRepo
+from kata.domain.models import KataTemplate
 
 
 class SandboxHelper:
@@ -92,3 +94,19 @@ def test_for_loop_scope():
     # helper = SandboxHelper()
     # helper.downloader.download_file_at_location()
     # downloader = Downloader(Api(), ThreadP)
+
+
+@pytest.mark.skip
+def test_kata_template_repo():
+    repo = KataTemplateRepo()
+
+    assert repo.get_all() == [
+        KataTemplate('java', 'junit5'),
+        KataTemplate('java', 'some-other'),
+        KataTemplate('js', 'jasminesomething'),
+        KataTemplate('js', 'maybe-mocha')
+    ]
+    assert repo.get_for_language('java') == [
+        KataTemplate('java', 'junit5'),
+        KataTemplate('java', 'some-other')
+    ]
