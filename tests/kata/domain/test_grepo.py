@@ -276,21 +276,21 @@ class TestGetFileUrls:
                 download_url='https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
             )])
 
-    def test_nested_directories_path_isn_t_root(self, grepo_with_scenario):
+    def test_nested_directories_path_isn_t_root__flatten_list_and_remove_nesting(self, grepo_with_scenario):
         # Given: A repo containing multiple dirs, one of them is empty | See: `mocked_contents_scenarios`
         grepo_with_scenario.init_scenario('nested_directories')
 
         # When: Fetching the root path: ''
         result = grepo_with_scenario.get_files_to_download(path='dir_at_root/dir_at_level_1')
 
-        # Then: Files hierarchy is flattened
+        # Then: Files hierarchy is flattened and nesting from the top level ('dir_at_root/dir_at_level_1') is removed
         assert sort_by_file_path(result) == sort_by_file_path([
             DownloadableFile(
-                file_path=Path('dir_at_root/dir_at_level_1/file_at_level_2.txt'),
+                file_path=Path('file_at_level_2.txt'),
                 download_url='https://github_url_for/dir_at_root/dir_at_level_1/file_at_level_2.txt'
             ),
             DownloadableFile(
-                file_path=Path('dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'),
+                file_path=Path('dir_at_level_2/file_at_level_3.txt'),
                 download_url='https://github_url_for/dir_at_root/dir_at_level_1/dir_at_level_2/file_at_level_3.txt'
             )])
 
@@ -353,9 +353,9 @@ class TestDownloadFilesAtLocation:
                 file_to_download=file,
                 file_content='EXPECTED TEXT CONTENT')
 
-        def test_file_has_different_name_in_url(self, tmp_path: Path, single_file_test_helper):
-            file = DownloadableFile(file_path=Path('correct_name.txt'),
-                                    download_url='http://this_is_the_url/wrong_name.md')
+        def test_file_has_different_path_in_url_use_file_path(self, tmp_path: Path, single_file_test_helper):
+            file = DownloadableFile(file_path=Path('expected/path/expected_name.md'),
+                                    download_url='http://this_is_the_url/different/path/different_name.md')
             root_dir = tmp_path
 
             single_file_test_helper.test_file_is_downloaded_and_saved_with_correct_content(
@@ -364,7 +364,7 @@ class TestDownloadFilesAtLocation:
                 file_content='EXPECTED TEXT CONTENT')
 
             # Already tested in helper, but re-tested here for clarity of intent
-            expected_written_file_path = root_dir / 'correct_name.txt'
+            expected_written_file_path = root_dir / 'expected/path/expected_name.md'
             assert expected_written_file_path.exists()
 
         def test_root_dir_doesnt_exist_then_create_it(self, tmp_path: Path, single_file_test_helper):

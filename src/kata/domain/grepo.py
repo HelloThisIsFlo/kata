@@ -26,10 +26,12 @@ class GRepo:
         :param user: Github Username
         :param repo: Github Repo
         :param path: Path in the Repo
-        :return: Flat list of all files recursively found along with their download URLs
+        :return: Flat list of all downloadable_files recursively found along with their download URLs
         """
         files = self._get_files_in_dir(user, repo, path)
-        return self._format_result(files)
+        downloadable_files = self._map_to_model(files)
+        downloadable_files = self._remove_nesting_if_in_sub_path(downloadable_files, path)
+        return downloadable_files
 
     def download_files_at_location(self, root_dir: Path, files_to_download: List[DownloadableFile]) -> None:
         if not root_dir.exists():
@@ -73,7 +75,19 @@ class GRepo:
         return files + get_files_in_all_sub_dirs_async()
 
     @staticmethod
-    def _format_result(contents):
+    def _remove_nesting_if_in_sub_path(files: List[DownloadableFile], sub_path: str):
+        if not sub_path:
+            return files
+
+        def files_with_sub_path_at_root():
+            for file in files:
+                yield DownloadableFile(file_path=file.file_path.relative_to(sub_path),
+                                       download_url=file.download_url)
+
+        return list(files_with_sub_path_at_root())
+
+    @staticmethod
+    def _map_to_model(contents):
         return [
             DownloadableFile(
                 file_path=Path(file['path']),
