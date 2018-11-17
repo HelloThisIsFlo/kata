@@ -2,9 +2,9 @@ from concurrent import futures
 from pathlib import Path
 from typing import NamedTuple, List
 
-from ..data.io.file import FileWriter
-from ..data.io.network import GithubApi
-from ..domain.models import DownloadableFile
+from kata.data.io.file import FileWriter
+from kata.data.io.network import GithubApi
+from kata.domain.models import DownloadableFile
 
 
 class _DownloadedFile(NamedTuple):
