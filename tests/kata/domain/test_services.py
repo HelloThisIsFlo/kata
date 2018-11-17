@@ -63,28 +63,49 @@ class TestInitKataService:
             mock_grepo.download_files_at_location.assert_called_with(parent_dir / kata_name,
                                                                      MOCK_FILES_TO_DOWNLOAD)
 
-        def test_no_explicit_template_name_but_only_one_template_available_for_language(self,
-                                                                                        tmp_path: Path,
-                                                                                        kata_template_repo: HardCodedKataTemplateRepo,
-                                                                                        mock_grepo: MagicMock,
-                                                                                        init_kata_service: InitKataService):
-            # Given: Template name not specified but only one available
-            kata_template_repo.available_templates = {'java': ['junit5']}
-            kata_name = 'my_kata'
-            template_lang = 'java'
-            template_name = None
+        class TestNoExplicitTemplateNameBut:
+            def test_only_one_template_available_for_language(self,
+                                                              tmp_path: Path,
+                                                              kata_template_repo: HardCodedKataTemplateRepo,
+                                                              mock_grepo: MagicMock,
+                                                              init_kata_service: InitKataService):
+                # Given: Template name not specified but only one available
+                kata_template_repo.available_templates = {'java': ['junit5']}
+                kata_name = 'my_kata'
+                template_lang = 'java'
+                template_name = None
 
-            # When: Initializing the Kata
-            init_kata_service.init_kata(tmp_path, kata_name, template_lang, template_name)
+                # When: Initializing the Kata
+                init_kata_service.init_kata(tmp_path, kata_name, template_lang, template_name)
 
-            # Then: File URLs have been been fetched with using the only available template name
-            mock_grepo.get_files_to_download.assert_called_with(
-                user=config.KATA_GITHUB_REPO_USER,
-                repo=config.KATA_GITHUB_REPO_REPO,
-                path='java/junit5')
+                # Then: File URLs have been been fetched with using the only available template name
+                mock_grepo.get_files_to_download.assert_called_with(
+                    user=config.KATA_GITHUB_REPO_USER,
+                    repo=config.KATA_GITHUB_REPO_REPO,
+                    path='java/junit5')
 
-        def test_no_explicit_template_name_but_default_specified(self):
-            pytest.skip('TODO')
+            def test_only_one_template_at_root(self,
+                                               tmp_path: Path,
+                                               kata_template_repo: HardCodedKataTemplateRepo,
+                                               mock_grepo: MagicMock,
+                                               init_kata_service: InitKataService):
+                # Given: Template name not specified but only one available at root (sub-path == None)
+                kata_template_repo.available_templates = {'java': [None]}
+                kata_name = 'my_kata'
+                template_lang = 'java'
+                template_name = None
+
+                # When: Initializing the Kata
+                init_kata_service.init_kata(tmp_path, kata_name, template_lang, template_name)
+
+                # Then: File URLs have been been fetched without any sub-path
+                mock_grepo.get_files_to_download.assert_called_with(
+                    user=config.KATA_GITHUB_REPO_USER,
+                    repo=config.KATA_GITHUB_REPO_REPO,
+                    path='java')
+
+            def test_default_specified_and_valid(self):
+                pytest.skip('TODO')
 
     class TestEdgeCases:
         def test_invalid_parent_dir(self, init_kata_service: InitKataService):
@@ -125,7 +146,7 @@ class TestInitKataService:
                                            kata_template_repo: HardCodedKataTemplateRepo):
                 with pytest.raises(KataTemplateLanguageNotFound):
                     kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
-                    init_kata_service.init_kata(tmp_path, VALID_KATA_NAME, 'language_doesnt_exist', NOT_USED)
+                    init_kata_service.init_kata(tmp_path, VALID_KATA_NAME, 'python', NOT_USED)
 
             def test_template_name_doesnt_exist(self,
                                                 tmp_path: Path,

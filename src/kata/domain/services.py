@@ -14,12 +14,11 @@ class InitKataService:
         self._grepo = grepo
 
     def init_kata(self, parent_dir: Path, kata_name: str, template_language: str, template_name: Optional[str]) -> None:
-        self.validate_parent_dir(parent_dir)
-        self.validate_kata_name(kata_name)
+        self._validate_parent_dir(parent_dir)
+        self._validate_kata_name(kata_name)
 
-        kata_template = self.get_kata_template(template_language, template_name)
-
-        path = f'{kata_template.language}/{kata_template.template_name}'
+        kata_template = self._get_kata_template(template_language, template_name)
+        path = self._build_path(kata_template)
         files_to_download = self._grepo.get_files_to_download(user=config.KATA_GITHUB_REPO_USER,
                                                               repo=config.KATA_GITHUB_REPO_REPO,
                                                               path=path)
@@ -27,12 +26,12 @@ class InitKataService:
         self._grepo.download_files_at_location(kata_dir, files_to_download)
 
     @staticmethod
-    def validate_parent_dir(parent_dir):
+    def _validate_parent_dir(parent_dir):
         if not parent_dir.exists():
             raise FileNotFoundError(f"Invalid Directory: '{parent_dir.absolute()}'")
 
     @staticmethod
-    def validate_kata_name(kata_name):
+    def _validate_kata_name(kata_name):
         def has_spaces():
             return len(kata_name.split(' ')) > 1
 
@@ -44,8 +43,7 @@ class InitKataService:
         if not re.match(r'^[_a-z]*$', kata_name):
             raise InvalidKataName(kata_name)
 
-    def get_kata_template(self, template_language: str, template_name: str):
-
+    def _get_kata_template(self, template_language: str, template_name: str):
         def none_available_for_language():
             return not templates_for_language
 
@@ -68,3 +66,10 @@ class InitKataService:
             return first()
         else:
             return first_found_or_raise(KataTemplateTemplateNameNotFound)
+
+    @staticmethod
+    def _build_path(kata_template):
+        path = kata_template.language
+        if kata_template.template_name:
+            path += '/' + kata_template.template_name
+        return path
