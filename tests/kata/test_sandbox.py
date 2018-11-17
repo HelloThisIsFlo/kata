@@ -142,6 +142,7 @@ class TestSandbox:
             print(templates)
 
         print_templates('python')
+        print_templates('java')
         print_templates('rust')
         print_templates('ruby')
         print_templates('elixir')

@@ -15,7 +15,7 @@ class KataTemplateRepo:
                                                            config.KATA_GITHUB_REPO_REPO,
                                                            language)
 
-        if self._has_readme(contents_of_language_root_dir):
+        if self._has_template_at_root(language, contents_of_language_root_dir):
             template_at_root = KataTemplate(language=language, template_name=None)
             return [template_at_root]
 
@@ -28,11 +28,17 @@ class KataTemplateRepo:
         return list(all_kata_templates_for_language())
 
     @staticmethod
-    def _has_readme(dir_contents):
-        for file_or_dir in dir_contents:
-            if re.match(r'^.*README(\....?)?$', file_or_dir['path']):
-                return True
-        return False
+    def _has_template_at_root(language, dir_contents):
+        def has_readme():
+            for file_or_dir in dir_contents:
+                if re.match(r'^.*README(\....?)?$', file_or_dir['path']):
+                    return True
+            return False
+
+        if language in config.has_template_at_root:
+            return config.has_template_at_root[language]
+        else:
+            return has_readme()
 
     @staticmethod
     def _extract_available_template_names(language_root_dir_contents):
