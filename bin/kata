@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import kata.cli
+from kata.presentation import cli
 
 if __name__ == '__main__':
-    kata.cli.cli()
+    cli.cli()
