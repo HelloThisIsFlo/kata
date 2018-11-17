@@ -22,6 +22,7 @@ class SandboxContext:
         self.file_writer = FileWriter()
         self.grepo = GRepo(self.api, self.file_writer, self.executor)
         self.kata_template_repo = HardCodedKataTemplateRepo()
+        self.real_kata_template_repo = KataTemplateRepo(self.api)
         self.sandbox_dir = Path('../sandbox')
         self.init_kata_service = InitKataService(self.kata_template_repo, self.grepo)
 
@@ -131,3 +132,17 @@ class TestSandbox:
         context = SandboxContext()
         context.kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
         context.init_kata_service.init_kata(context.sandbox_dir, 'hey_yo', 'java', 'junit5')
+
+    @pytest.mark.skip
+    def test_list_kata_templates(self):
+        context = SandboxContext()
+
+        def print_templates(language):
+            templates = context.real_kata_template_repo.get_for_language(language)
+            print(templates)
+
+        print_templates('python')
+        print_templates('rust')
+        print_templates('ruby')
+        print_templates('elixir')
+        print_templates('csharp')

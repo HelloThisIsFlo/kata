@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 
 # All domain models are expected to be VALID
@@ -15,4 +15,4 @@ class DownloadableFile(NamedTuple):
 
 class KataTemplate(NamedTuple):
     language: str
-    template_name: str
+    template_name: Optional[str]
