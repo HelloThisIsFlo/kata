@@ -4,9 +4,6 @@ from kata.domain.models import KataTemplate
 
 
 class KataTemplateRepo:
-    def get_all(self) -> List[KataTemplate]:
-        raise NotImplementedError()
-
     def get_for_language(self, language: str) -> List[KataTemplate]:
         raise NotImplementedError()
 
@@ -23,14 +20,6 @@ class HardCodedKataTemplateRepo(KataTemplateRepo):
                 'maybe-mocha'
             ]
         }
-
-    def get_all(self) -> List[KataTemplate]:
-        def all_templates():
-            for language in self.available_templates:
-                for template_name in self.available_templates[language]:
-                    yield KataTemplate(language, template_name)
-
-        return list(all_templates())
 
     def get_for_language(self, language: str) -> List[KataTemplate]:
         def all_for_language_or_empty():
