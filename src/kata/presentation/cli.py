@@ -5,7 +5,7 @@ from typing import List
 
 import click
 
-from kata.data.repos import HardCodedKataTemplateRepo
+from kata.data.repos import KataTemplateRepo
 from kata.domain.exceptions import KataError
 from kata.domain.services import InitKataService
 from ..data.io.file import FileWriter
@@ -87,5 +87,6 @@ class Main:
         self.api = GithubApi()
         self.file_writer = FileWriter()
         self.grepo = GRepo(self.api, self.file_writer, self.executor)
-        self.kata_template_repo = HardCodedKataTemplateRepo()
+        # self.kata_template_repo = HardCodedKataTemplateRepo()
+        self.kata_template_repo = KataTemplateRepo(self.api)
         self.init_kata_service = InitKataService(self.kata_template_repo, self.grepo)
