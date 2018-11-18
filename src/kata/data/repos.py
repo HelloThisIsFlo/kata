@@ -49,26 +49,27 @@ class KataTemplateRepo:
                 directory['type'] == 'dir']
 
 
-class HardCodedKataTemplateRepo(KataTemplateRepo):
-    def __init__(self):
-        super().__init__(None)
-        self.available_templates = {
-            'java': [
-                'junit5',
-                'some-other'
-            ],
-            'js': [
-                'jasminesomething',
-                'maybe-mocha'
-            ]
-        }
+class HardCoded:
+    class KataTemplateRepo(KataTemplateRepo):
+        def __init__(self):
+            super().__init__(None)
+            self.available_templates = {
+                'java': [
+                    'junit5',
+                    'some-other'
+                ],
+                'js': [
+                    'jasminesomething',
+                    'maybe-mocha'
+                ]
+            }
 
-    def get_for_language(self, language: KataLanguage) -> List[KataTemplate]:
-        def all_for_language_or_empty():
-            for template_name in self.available_templates.get(language.name, []):
-                yield KataTemplate(language, template_name)
+        def get_for_language(self, language: KataLanguage) -> List[KataTemplate]:
+            def all_for_language_or_empty():
+                for template_name in self.available_templates.get(language.name, []):
+                    yield KataTemplate(language, template_name)
 
-        return list(all_for_language_or_empty())
+            return list(all_for_language_or_empty())
 
 
 class KataLanguageRepo:

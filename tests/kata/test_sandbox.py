@@ -9,7 +9,7 @@ import requests
 
 from kata.data.io.file import FileWriter
 from kata.data.io.network import GithubApi
-from kata.data.repos import KataTemplateRepo, HardCodedKataTemplateRepo
+from kata.data.repos import KataTemplateRepo, HardCoded
 from kata.domain.grepo import GRepo
 from kata.domain.models import KataTemplate
 from kata.domain.services import InitKataService
@@ -21,7 +21,7 @@ class SandboxContext:
         self.api = GithubApi()
         self.file_writer = FileWriter()
         self.grepo = GRepo(self.api, self.file_writer, self.executor)
-        self.kata_template_repo = HardCodedKataTemplateRepo()
+        self.kata_template_repo = HardCoded.KataTemplateRepo()
         self.real_kata_template_repo = KataTemplateRepo(self.api)
         self.sandbox_dir = Path('../sandbox')
         self.init_kata_service = InitKataService(self.kata_template_repo, self.grepo)
