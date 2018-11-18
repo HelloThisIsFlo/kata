@@ -49,6 +49,31 @@ class KataTemplateRepo:
                 directory['type'] == 'dir']
 
 
+class KataLanguageRepo:
+    def __init__(self, api: GithubApi):
+        self._api = api
+
+    def get_all(self) -> List[KataLanguage]:
+        contents_of_root_dir = self._api.contents(config.KATA_GITHUB_REPO_USER,
+                                                  config.KATA_GITHUB_REPO_REPO,
+                                                  '')
+
+        return list(self._all_sub_directories_mapped_to_languages(contents_of_root_dir))
+
+    @staticmethod
+    def _all_sub_directories_mapped_to_languages(contents_of_dir):
+        for file_or_dir in contents_of_dir:
+            if file_or_dir['type'] == 'dir':
+                sub_dir_name_interpreted_as_available_kata_language_name = file_or_dir['path']
+                yield KataLanguage(name=sub_dir_name_interpreted_as_available_kata_language_name)
+
+    def get(self, language_name: str) -> Optional[KataLanguage]:
+        all_languages = self.get_all()
+        for language in all_languages:
+            if language.name == language_name:
+                return language
+
+
 class HardCoded:
     class KataTemplateRepo(KataTemplateRepo):
         def __init__(self):
@@ -70,28 +95,3 @@ class HardCoded:
                     yield KataTemplate(language, template_name)
 
             return list(all_for_language_or_empty())
-
-
-class KataLanguageRepo:
-    def __init__(self, api: GithubApi):
-        self._api = api
-
-    def get_all(self) -> List[KataLanguage]:
-        contents_of_root_dir = self._api.contents(config.KATA_GITHUB_REPO_USER,
-                                                  config.KATA_GITHUB_REPO_REPO,
-                                                  '')
-
-        return list(self._all_sub_directories_mapped_to_languages(contents_of_root_dir))
-
-    @staticmethod
-    def _all_sub_directories_mapped_to_languages(contents_of_dir):
-        for file_or_dir in contents_of_dir:
-            if file_or_dir['type'] == 'dir':
-                sub_dir_name_interpreted_as_available_kata_language_name = file_or_dir['path']
-                yield KataLanguage(name=sub_dir_name_interpreted_as_available_kata_language_name)
-
-    def get(self, language_name=str) -> Optional[KataLanguage]:
-        all_languages = self.get_all()
-        for language in all_languages:
-            if language.name == language_name:
-                return language
