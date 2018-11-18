@@ -79,7 +79,7 @@ def init(ctx: click.Context, kata_name, template_language, template_name):
             print_error(f"Available templates for '{template_language}':")
             for template in template_not_found.available_templates:
                 print_error(f"  - {template.template_name}")
-               
+
     except KataError as error:
         print_error(str(error))
 
