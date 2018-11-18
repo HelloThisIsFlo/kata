@@ -7,7 +7,7 @@ import click
 
 from kata.data.io.file import FileWriter
 from kata.data.io.network import GithubApi
-from kata.data.repos import KataTemplateRepo
+from kata.data.repos import KataTemplateRepo, KataLanguageRepo
 from kata.domain.exceptions import KataError
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile
@@ -89,4 +89,5 @@ class Main:
         self.grepo = GRepo(self.api, self.file_writer, self.executor)
         # self.kata_template_repo = HardCodedKataTemplateRepo()
         self.kata_template_repo = KataTemplateRepo(self.api)
-        self.init_kata_service = InitKataService(self.kata_template_repo, self.grepo)
+        self.kata_language_repo = KataLanguageRepo(self.api)
+        self.init_kata_service = InitKataService(self.kata_language_repo, self.kata_template_repo, self.grepo)

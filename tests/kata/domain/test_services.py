@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from kata import config
-from kata.data.repos import HardCoded, KataLanguageRepo
+from kata.data.repos import HardCoded
 from kata.domain.exceptions import InvalidKataName, KataLanguageNotFound, KataTemplateTemplateNameNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile
@@ -33,16 +33,22 @@ class TestInitKataService:
         return HardCoded.KataTemplateRepo()
 
     @pytest.fixture
-    def init_kata_service(self, kata_template_repo, mock_grepo):
-        return InitKataService(kata_template_repo, mock_grepo)
+    def kata_language_repo(self):
+        return HardCoded.KataLanguageRepo()
+
+    @pytest.fixture
+    def init_kata_service(self, kata_language_repo, kata_template_repo, mock_grepo):
+        return InitKataService(kata_language_repo, kata_template_repo, mock_grepo)
 
     class TestValidCases:
         def test_with_valid_template(self,
                                      tmp_path: Path,
+                                     kata_language_repo: HardCoded.KataLanguageRepo,
                                      kata_template_repo: HardCoded.KataTemplateRepo,
                                      mock_grepo: MagicMock,
                                      init_kata_service: InitKataService):
             # Given: Template is available and parent_dir is valid
+            kata_language_repo.available_languages = ['java']
             kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
             kata_name = 'my_kata'
             template_lang = 'java'
@@ -66,10 +72,12 @@ class TestInitKataService:
         class TestNoExplicitTemplateNameBut:
             def test_only_one_template_available_for_language(self,
                                                               tmp_path: Path,
+                                                              kata_language_repo: HardCoded.KataLanguageRepo,
                                                               kata_template_repo: HardCoded.KataTemplateRepo,
                                                               mock_grepo: MagicMock,
                                                               init_kata_service: InitKataService):
                 # Given: Template name not specified but only one available
+                kata_language_repo.available_languages = ['java']
                 kata_template_repo.available_templates = {'java': ['junit5']}
                 kata_name = 'my_kata'
                 template_lang = 'java'
@@ -86,10 +94,12 @@ class TestInitKataService:
 
             def test_only_one_template_at_root(self,
                                                tmp_path: Path,
+                                               kata_language_repo: HardCoded.KataLanguageRepo,
                                                kata_template_repo: HardCoded.KataTemplateRepo,
                                                mock_grepo: MagicMock,
                                                init_kata_service: InitKataService):
                 # Given: Template name not specified but only one available at root (sub-path == None)
+                kata_language_repo.available_languages = ['java']
                 kata_template_repo.available_templates = {'java': [None]}
                 kata_name = 'my_kata'
                 template_lang = 'java'
@@ -143,15 +153,19 @@ class TestInitKataService:
             def test_language_doesnt_exist(self,
                                            tmp_path: Path,
                                            init_kata_service: InitKataService,
+                                           kata_language_repo: HardCoded.KataLanguageRepo,
                                            kata_template_repo: HardCoded.KataTemplateRepo):
                 with pytest.raises(KataLanguageNotFound):
+                    kata_language_repo.available_languages = ['java']
                     kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
                     init_kata_service.init_kata(tmp_path, VALID_KATA_NAME, 'python', NOT_USED)
 
             def test_template_name_doesnt_exist(self,
                                                 tmp_path: Path,
                                                 init_kata_service: InitKataService,
+                                                kata_language_repo: HardCoded.KataLanguageRepo,
                                                 kata_template_repo: HardCoded.KataTemplateRepo):
                 with pytest.raises(KataTemplateTemplateNameNotFound):
+                    kata_language_repo.available_languages = ['java']
                     kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
                     init_kata_service.init_kata(tmp_path, VALID_KATA_NAME, 'java', 'some_framework_thats_not_junit5')

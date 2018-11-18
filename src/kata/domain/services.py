@@ -3,14 +3,14 @@ from pathlib import Path
 from typing import Optional
 
 from kata import config
-from kata.data.repos import KataTemplateRepo
+from kata.data.repos import KataTemplateRepo, KataLanguageRepo
 from kata.domain.exceptions import InvalidKataName, KataLanguageNotFound, KataTemplateTemplateNameNotFound
 from kata.domain.grepo import GRepo
-from kata.domain.models import KataLanguage
 
 
 class InitKataService:
-    def __init__(self, kata_template_repo: KataTemplateRepo, grepo: GRepo):
+    def __init__(self, kata_language_repo: KataLanguageRepo, kata_template_repo: KataTemplateRepo, grepo: GRepo):
+        self._kata_language_repo = kata_language_repo
         self._kata_template_repo = kata_template_repo
         self._grepo = grepo
 
@@ -45,8 +45,11 @@ class InitKataService:
             raise InvalidKataName(kata_name)
 
     def _get_kata_template(self, template_language: str, template_name: str):
-        def none_available_for_language():
-            return not templates_for_language
+        def get_kata_language_or_raise():
+            res = self._kata_language_repo.get(template_language)
+            if not res:
+                raise KataLanguageNotFound()
+            return res
 
         def only_one_available_for_language():
             return len(templates_for_language) == 1
@@ -60,11 +63,8 @@ class InitKataService:
                     return template
             raise exception()
 
-        # FIXME: Use KataLanguageRepo to construct the language
-        kata_language = KataLanguage(template_language)
+        kata_language = get_kata_language_or_raise()
         templates_for_language = self._kata_template_repo.get_for_language(kata_language)
-        if none_available_for_language():
-            raise KataLanguageNotFound()
         if only_one_available_for_language():
             return first()
         else:

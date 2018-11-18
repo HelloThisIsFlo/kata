@@ -95,3 +95,18 @@ class HardCoded:
                     yield KataTemplate(language, template_name)
 
             return list(all_for_language_or_empty())
+
+    class KataLanguageRepo(KataLanguageRepo):
+        def __init__(self):
+            super().__init__(None)
+            self.available_languages: List[str] = []
+
+        def get_all(self) -> List[KataLanguage]:
+            return [KataLanguage(lang_name) for lang_name in self.available_languages]
+
+        def get(self, language_name: str) -> Optional[KataLanguage]:
+            for available_language_name in self.available_languages:
+                if available_language_name == language_name:
+                    return KataLanguage(language_name)
+            if language_name not in self.available_languages:
+                return None
