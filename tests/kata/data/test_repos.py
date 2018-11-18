@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from kata import config
-from kata.data.repos import KataTemplateRepo
+from kata.data.repos import KataTemplateRepo, KataLanguageRepo
 from kata.domain.models import KataTemplate, KataLanguage
 
 
@@ -30,11 +30,13 @@ def mock_dir_entry(dir_path):
     }
 
 
+@pytest.fixture
+@mock.patch('src.kata.data.io.network.GithubApi')
+def mock_api(mocked_api):
+    return mocked_api
+
+
 class TestKataTemplateRepo:
-    @pytest.fixture
-    @mock.patch('src.kata.data.io.network.GithubApi')
-    def mock_api(self, mocked_api):
-        return mocked_api
 
     @pytest.fixture
     def kata_template_repo(self, mock_api):
@@ -115,3 +117,58 @@ class TestKataTemplateRepo:
             # Then: All available templates are returned
             assert available_java_templates == [KataTemplate(KataLanguage('java'), 'junit5'),
                                                 KataTemplate(KataLanguage('java'), 'hamcrest')]
+
+
+class TestKataLanguageRepo:
+
+    @pytest.fixture
+    def kata_language_repo(self, mock_api):
+        config.has_template_at_root = {}
+        return KataLanguageRepo(mock_api)
+
+    class TestGetAll:
+        def test_request_contents_of_root_directory(self,
+                                                    mock_api: MagicMock,
+                                                    kata_language_repo: KataLanguageRepo):
+            kata_language_repo.get_all()
+            mock_api.contents.assert_called_with(config.KATA_GITHUB_REPO_USER,
+                                                 config.KATA_GITHUB_REPO_REPO,
+                                                 '')
+
+        def test_return_all_directory_as_kata_languages(self,
+                                                        mock_api: MagicMock,
+                                                        kata_language_repo: KataLanguageRepo):
+            mock_api.contents.return_value = [mock_file_entry('some_random_file.txt'),
+                                              mock_dir_entry('java'),
+                                              mock_file_entry('README.md'),
+                                              mock_dir_entry('rust')]
+            all_languages = kata_language_repo.get_all()
+            assert all_languages == [KataLanguage('java'),
+                                     KataLanguage('rust')]
+
+    class TestGet:
+        def test_request_contents_of_root_directory(self,
+                                                    mock_api: MagicMock,
+                                                    kata_language_repo: KataLanguageRepo):
+            kata_language_repo.get(language_name='java')
+            mock_api.contents.assert_called_with(config.KATA_GITHUB_REPO_USER,
+                                                 config.KATA_GITHUB_REPO_REPO,
+                                                 '')
+
+        def test_valid_language_name(self,
+                                     mock_api: MagicMock,
+                                     kata_language_repo: KataLanguageRepo):
+            mock_api.contents.return_value = [mock_file_entry('some_random_file.txt'),
+                                              mock_dir_entry('java'),
+                                              mock_file_entry('README.md'),
+                                              mock_dir_entry('rust')]
+            assert kata_language_repo.get('java') == KataLanguage('java')
+
+        def test_invalid_language_name(self,
+                                       mock_api: MagicMock,
+                                       kata_language_repo: KataLanguageRepo):
+            mock_api.contents.return_value = [mock_file_entry('some_random_file.txt'),
+                                              mock_dir_entry('java'),
+                                              mock_file_entry('README.md'),
+                                              mock_dir_entry('rust')]
+            assert kata_language_repo.get('doesnotexist') is None
