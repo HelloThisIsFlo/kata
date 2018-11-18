@@ -7,7 +7,7 @@ import pytest
 
 from kata import config
 from kata.data.repos import HardCodedKataTemplateRepo
-from kata.domain.exceptions import InvalidKataName, KataTemplateLanguageNotFound, KataTemplateTemplateNameNotFound
+from kata.domain.exceptions import InvalidKataName, KataLanguageNotFound, KataTemplateTemplateNameNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile
 from kata.domain.services import InitKataService
@@ -144,7 +144,7 @@ class TestInitKataService:
                                            tmp_path: Path,
                                            init_kata_service: InitKataService,
                                            kata_template_repo: HardCodedKataTemplateRepo):
-                with pytest.raises(KataTemplateLanguageNotFound):
+                with pytest.raises(KataLanguageNotFound):
                     kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
                     init_kata_service.init_kata(tmp_path, VALID_KATA_NAME, 'python', NOT_USED)
 

@@ -4,7 +4,7 @@ from typing import Optional
 
 from kata import config
 from kata.data.repos import KataTemplateRepo
-from kata.domain.exceptions import InvalidKataName, KataTemplateLanguageNotFound, KataTemplateTemplateNameNotFound
+from kata.domain.exceptions import InvalidKataName, KataLanguageNotFound, KataTemplateTemplateNameNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import KataLanguage
 
@@ -64,7 +64,7 @@ class InitKataService:
         kata_language = KataLanguage(template_language)
         templates_for_language = self._kata_template_repo.get_for_language(kata_language)
         if none_available_for_language():
-            raise KataTemplateLanguageNotFound()
+            raise KataLanguageNotFound()
         if only_one_available_for_language():
             return first()
         else:

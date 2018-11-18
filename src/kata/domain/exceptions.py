@@ -9,7 +9,7 @@ class InvalidKataName(KataError):
         self.reason = reason
 
 
-class KataTemplateLanguageNotFound(KataError):
+class KataLanguageNotFound(KataError):
     pass
 
 
