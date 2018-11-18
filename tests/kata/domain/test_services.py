@@ -205,3 +205,32 @@ class TestInitKataService:
                     assert template_not_found_error.value.available_templates == \
                            [KataTemplate(KataLanguage('java'), 'junit5'),
                             KataTemplate(KataLanguage('java'), 'hamcrest')]
+
+    class TestListLanguages:
+        def test_valid_case(self,
+                            init_kata_service: InitKataService,
+                            kata_language_repo: HardCoded.KataLanguageRepo):
+            kata_language_repo.available_languages = ['java', 'python']
+            available_languages = init_kata_service.list_available_languages()
+            assert available_languages == [KataLanguage('java'), KataLanguage('python')]
+
+    class TestListTemplates:
+        def test_valid_language(self,
+                                init_kata_service: InitKataService,
+                                kata_language_repo: HardCoded.KataLanguageRepo,
+                                kata_template_repo: HardCoded.KataTemplateRepo):
+            kata_language_repo.available_languages = ['java']
+            kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
+            available_templates_for_java = init_kata_service.list_available_templates('java')
+            assert available_templates_for_java == [KataTemplate(KataLanguage('java'), 'junit5'),
+                                                    KataTemplate(KataLanguage('java'), 'hamcrest')]
+
+        def test_language_doesnt_exist(self,
+                                       init_kata_service: InitKataService,
+                                       kata_language_repo: HardCoded.KataLanguageRepo,
+                                       kata_template_repo: HardCoded.KataTemplateRepo):
+            kata_language_repo.available_languages = ['java']
+            kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
+            with pytest.raises(KataLanguageNotFound) as language_not_found_error:
+                init_kata_service.list_available_templates('python')
+            assert language_not_found_error.value.available_languages == [KataLanguage('java')]

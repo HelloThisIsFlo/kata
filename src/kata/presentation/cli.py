@@ -86,6 +86,48 @@ def init(ctx: click.Context, kata_name, template_language, template_name):
 
 @cli.group()
 @click.pass_context
+def list(_ctx: click.Context):
+    pass
+
+
+@list.command()
+@click.pass_context
+def languages(ctx: click.Context):
+    main_ctx: Main = ctx.obj
+    try:
+        available_kata_languages = main_ctx.init_kata_service.list_available_languages()
+        print_normal("Available languages:")
+        for lang in available_kata_languages:
+            print_normal(f"  - '{lang.name}''")
+
+    except KataError as error:
+        print_error(str(error))
+
+
+@list.command()
+@click.pass_context
+@click.argument('language')
+def templates(ctx: click.Context, language):
+    main_ctx: Main = ctx.obj
+    try:
+        available_kata_templates = main_ctx.init_kata_service.list_available_templates(language)
+        print_normal(f"Available templates for '{language}':")
+        for template in available_kata_templates:
+            print_normal(f"  - '{template.template_name}'")
+
+    except KataLanguageNotFound as lang_not_found:
+        print_error(f"Language '{language}' could not be found!")
+        print_error('')
+        print_error('Available languages:')
+        for lang in lang_not_found.available_languages:
+            print_error(f"  - {lang.name}")
+
+    except KataError as error:
+        print_error(str(error))
+
+
+@cli.group()
+@click.pass_context
 def debug(_ctx: click.Context):
     pass
 

@@ -1,11 +1,12 @@
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from kata import config
 from kata.data.repos import KataTemplateRepo, KataLanguageRepo
 from kata.domain.exceptions import InvalidKataName, KataLanguageNotFound, KataTemplateNotFound
 from kata.domain.grepo import GRepo
+from kata.domain.models import KataLanguage, KataTemplate
 
 
 class InitKataService:
@@ -26,6 +27,13 @@ class InitKataService:
         kata_dir = parent_dir / kata_name
         self._grepo.download_files_at_location(kata_dir, files_to_download)
 
+    def list_available_languages(self) -> List[KataLanguage]:
+        return self._kata_language_repo.get_all()
+
+    def list_available_templates(self, language: str) -> List[KataTemplate]:
+        kata_language = self._get_kata_language_or_raise(language)
+        return self._kata_template_repo.get_for_language(kata_language)
+
     @staticmethod
     def _validate_parent_dir(parent_dir):
         if not parent_dir.exists():
@@ -45,12 +53,6 @@ class InitKataService:
             raise InvalidKataName(kata_name)
 
     def _get_kata_template(self, template_language: str, template_name: str):
-        def get_kata_language_or_raise():
-            res = self._kata_language_repo.get(template_language)
-            if not res:
-                all_languages = self._kata_language_repo.get_all()
-                raise KataLanguageNotFound(all_languages)
-            return res
 
         def only_one_available_for_language():
             return len(templates_for_language) == 1
@@ -65,12 +67,19 @@ class InitKataService:
 
             raise KataTemplateNotFound(templates_for_language)
 
-        kata_language = get_kata_language_or_raise()
+        kata_language = self._get_kata_language_or_raise(template_language)
         templates_for_language = self._kata_template_repo.get_for_language(kata_language)
 
         if not template_name and only_one_available_for_language():
             return first()
         return first_found_or_raise_template_not_found()
+
+    def _get_kata_language_or_raise(self, language_name):
+        res = self._kata_language_repo.get(language_name)
+        if not res:
+            all_languages = self._kata_language_repo.get_all()
+            raise KataLanguageNotFound(all_languages)
+        return res
 
     @staticmethod
     def _build_path(kata_template):
