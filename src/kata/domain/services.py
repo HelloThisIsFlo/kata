@@ -48,7 +48,8 @@ class InitKataService:
         def get_kata_language_or_raise():
             res = self._kata_language_repo.get(template_language)
             if not res:
-                raise KataLanguageNotFound()
+                all_languages = self._kata_language_repo.get_all()
+                raise KataLanguageNotFound(all_languages)
             return res
 
         def only_one_available_for_language():
@@ -57,18 +58,19 @@ class InitKataService:
         def first():
             return templates_for_language[0]
 
-        def first_found_or_raise(exception):
+        def first_found_or_raise_template_not_found():
             for template in templates_for_language:
                 if template.template_name == template_name:
                     return template
-            raise exception()
+
+            raise KataTemplateTemplateNameNotFound(templates_for_language)
 
         kata_language = get_kata_language_or_raise()
         templates_for_language = self._kata_template_repo.get_for_language(kata_language)
         if only_one_available_for_language():
             return first()
         else:
-            return first_found_or_raise(KataTemplateTemplateNameNotFound)
+            return first_found_or_raise_template_not_found()
 
     @staticmethod
     def _build_path(kata_template):

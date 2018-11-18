@@ -1,3 +1,8 @@
+from typing import List
+
+from kata.domain.models import KataLanguage, KataTemplate
+
+
 class KataError(Exception):
     pass
 
@@ -10,8 +15,10 @@ class InvalidKataName(KataError):
 
 
 class KataLanguageNotFound(KataError):
-    pass
+    def __init__(self, available_languages: List[KataLanguage] = None):
+        self.available_languages = available_languages
 
 
 class KataTemplateTemplateNameNotFound(KataError):
-    pass
+    def __init__(self, available_templates: List[KataTemplate] = None):
+        self.available_templates = available_templates
