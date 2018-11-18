@@ -28,6 +28,7 @@ def print_error(msg):
 def print_success(msg):
     click.secho(msg, fg='green')
 
+
 def print_warning(msg):
     click.secho(msg, fg='yellow')
 
@@ -52,12 +53,14 @@ def init(ctx: click.Context, kata_name, template_language, template_name):
     try:
         main_ctx.init_kata_service.init_kata(current_dir, kata_name, template_language, template_name)
         print_success("Done!")
+
     except KataLanguageNotFound as lang_not_found:
         print_error(f"Language '{template_language}' could not be found!")
         print_error('')
         print_error('Available languages:')
         for lang in lang_not_found.available_languages:
             print_error(f"  - {lang.name}")
+
     except KataTemplateNotFound as template_not_found:
         def has_only_root_template():
             return len(template_not_found.available_templates) == 1 \
@@ -76,6 +79,9 @@ def init(ctx: click.Context, kata_name, template_language, template_name):
             print_error(f"Available templates for '{template_language}':")
             for template in template_not_found.available_templates:
                 print_error(f"  - {template.template_name}")
+               
+    except KataError as error:
+        print_error(str(error))
 
 
 @cli.group()
