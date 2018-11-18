@@ -67,10 +67,10 @@ class InitKataService:
 
         kata_language = get_kata_language_or_raise()
         templates_for_language = self._kata_template_repo.get_for_language(kata_language)
-        if only_one_available_for_language():
+
+        if not template_name and only_one_available_for_language():
             return first()
-        else:
-            return first_found_or_raise_template_not_found()
+        return first_found_or_raise_template_not_found()
 
     @staticmethod
     def _build_path(kata_template):

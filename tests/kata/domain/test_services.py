@@ -175,3 +175,29 @@ class TestInitKataService:
                 assert template_not_found_error.value.available_templates == \
                        [KataTemplate(KataLanguage('java'), 'junit5'),
                         KataTemplate(KataLanguage('java'), 'hamcrest')]
+
+            def test_template_name_doesnt_exist_template_at_root(self,
+                                                                 tmp_path: Path,
+                                                                 init_kata_service: InitKataService,
+                                                                 kata_language_repo: HardCoded.KataLanguageRepo,
+                                                                 kata_template_repo: HardCoded.KataTemplateRepo):
+                with pytest.raises(KataTemplateTemplateNameNotFound) as template_not_found_error:
+                    kata_language_repo.available_languages = ['java']
+                    kata_template_repo.available_templates = {'java': [None]}
+                    init_kata_service.init_kata(tmp_path, VALID_KATA_NAME, 'java', 'some_framework_thats_not_junit5')
+
+                assert template_not_found_error.value.available_templates == [KataTemplate(KataLanguage('java'), None)]
+
+            def test_template_name_isnt_given_but_multiple_options_are_available(self,
+                                                                                 tmp_path: Path,
+                                                                                 init_kata_service: InitKataService,
+                                                                                 kata_language_repo: HardCoded.KataLanguageRepo,
+                                                                                 kata_template_repo: HardCoded.KataTemplateRepo):
+                with pytest.raises(KataTemplateTemplateNameNotFound) as template_not_found_error:
+                    kata_language_repo.available_languages = ['java']
+                    kata_template_repo.available_templates = {'java': ['junit5', 'hamcrest']}
+                    init_kata_service.init_kata(tmp_path, VALID_KATA_NAME, 'java', None)
+
+                assert template_not_found_error.value.available_templates == \
+                       [KataTemplate(KataLanguage('java'), 'junit5'),
+                        KataTemplate(KataLanguage('java'), 'hamcrest')]

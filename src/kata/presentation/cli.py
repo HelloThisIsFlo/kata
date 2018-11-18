@@ -8,7 +8,7 @@ import click
 from kata.data.io.file import FileWriter
 from kata.data.io.network import GithubApi
 from kata.data.repos import KataTemplateRepo, KataLanguageRepo
-from kata.domain.exceptions import KataError
+from kata.domain.exceptions import KataError, KataLanguageNotFound, KataTemplateTemplateNameNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile
 from kata.domain.services import InitKataService
@@ -21,6 +21,21 @@ def cli(ctx: click.Context):
     ctx.obj = main
 
 
+def print_error(msg):
+    click.secho(msg, fg='red')
+
+
+def print_success(msg):
+    click.secho(msg, fg='green')
+
+def print_warning(msg):
+    click.secho(msg, fg='yellow')
+
+
+def print_normal(msg):
+    click.echo(msg)
+
+
 @cli.command()
 @click.pass_context
 @click.argument('kata_name')
@@ -30,8 +45,37 @@ def init(ctx: click.Context, kata_name, template_language, template_name):
     main_ctx: Main = ctx.obj
 
     current_dir = Path('.')
-    click.echo(f"Initializing Kata '{kata_name}'")
-    main_ctx.init_kata_service.init_kata(current_dir, kata_name, template_language, template_name)
+    print_normal(f"Initializing Kata in './{kata_name}'")
+    print_normal(f"  - Kata Language: '{template_language}'")
+    print_normal(f"  - Kata Template: '{template_name}'")
+    print_normal("")
+    try:
+        main_ctx.init_kata_service.init_kata(current_dir, kata_name, template_language, template_name)
+        print_success("Done!")
+    except KataLanguageNotFound as lang_not_found:
+        print_error(f"Language '{template_language}' could not be found!")
+        print_error('')
+        print_error('Available languages:')
+        for lang in lang_not_found.available_languages:
+            print_error(f"  - {lang.name}")
+    except KataTemplateTemplateNameNotFound as template_not_found:
+        def has_only_root_template():
+            return len(template_not_found.available_templates) == 1 \
+                   and template_not_found.available_templates[0].template_name is None
+
+        print_error(f"Template '{template_name}' could not be found!")
+        print_error('')
+
+        if has_only_root_template():
+            print_warning(f"Language '{template_language}' only has one template, and its located at its root")
+            print_warning(f"To initialize a kata with '{template_language}', simply do not specify any template name:")
+            print_warning('')
+            print_warning(f"    kata init {kata_name} {template_language}")
+            print_warning('')
+        else:
+            print_error(f"Available templates for '{template_language}':")
+            for template in template_not_found.available_templates:
+                print_error(f"  - {template.template_name}")
 
 
 @cli.group()
