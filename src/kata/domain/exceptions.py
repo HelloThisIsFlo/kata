@@ -19,7 +19,6 @@ class KataLanguageNotFound(KataError):
         self.available_languages = available_languages
 
 
-# TODO: Rename KataTemplateNotFound
-class KataTemplateTemplateNameNotFound(KataError):
+class KataTemplateNotFound(KataError):
     def __init__(self, available_templates: List[KataTemplate] = None):
         self.available_templates = available_templates

@@ -8,7 +8,7 @@ import click
 from kata.data.io.file import FileWriter
 from kata.data.io.network import GithubApi
 from kata.data.repos import KataTemplateRepo, KataLanguageRepo
-from kata.domain.exceptions import KataError, KataLanguageNotFound, KataTemplateTemplateNameNotFound
+from kata.domain.exceptions import KataError, KataLanguageNotFound, KataTemplateNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile
 from kata.domain.services import InitKataService
@@ -58,7 +58,7 @@ def init(ctx: click.Context, kata_name, template_language, template_name):
         print_error('Available languages:')
         for lang in lang_not_found.available_languages:
             print_error(f"  - {lang.name}")
-    except KataTemplateTemplateNameNotFound as template_not_found:
+    except KataTemplateNotFound as template_not_found:
         def has_only_root_template():
             return len(template_not_found.available_templates) == 1 \
                    and template_not_found.available_templates[0].template_name is None
