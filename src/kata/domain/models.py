@@ -13,6 +13,10 @@ class DownloadableFile(NamedTuple):
     download_url: str
 
 
+class KataLanguage(NamedTuple):
+    name: str
+
+
 class KataTemplate(NamedTuple):
-    language: str
+    language: KataLanguage
     template_name: Optional[str]

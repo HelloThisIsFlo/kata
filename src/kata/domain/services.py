@@ -6,6 +6,7 @@ from kata import config
 from kata.data.repos import KataTemplateRepo
 from kata.domain.exceptions import InvalidKataName, KataTemplateLanguageNotFound, KataTemplateTemplateNameNotFound
 from kata.domain.grepo import GRepo
+from kata.domain.models import KataLanguage
 
 
 class InitKataService:
@@ -59,7 +60,9 @@ class InitKataService:
                     return template
             raise exception()
 
-        templates_for_language = self._kata_template_repo.get_for_language(template_language)
+        # FIXME: Use KataLanguageRepo to construct the language
+        kata_language = KataLanguage(template_language)
+        templates_for_language = self._kata_template_repo.get_for_language(kata_language)
         if none_available_for_language():
             raise KataTemplateLanguageNotFound()
         if only_one_available_for_language():
@@ -69,7 +72,7 @@ class InitKataService:
 
     @staticmethod
     def _build_path(kata_template):
-        path = kata_template.language
+        path = kata_template.language.name
         if kata_template.template_name:
             path += '/' + kata_template.template_name
         return path

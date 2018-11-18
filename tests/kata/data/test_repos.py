@@ -5,7 +5,7 @@ import pytest
 
 from kata import config
 from kata.data.repos import KataTemplateRepo
-from kata.domain.models import KataTemplate
+from kata.domain.models import KataTemplate, KataLanguage
 
 
 def extract_name_from_path(path):
@@ -45,7 +45,7 @@ class TestKataTemplateRepo:
         def test_request_contents_of_language_directory(self,
                                                         mock_api: MagicMock,
                                                         kata_template_repo: KataTemplateRepo):
-            kata_template_repo.get_for_language('javascript')
+            kata_template_repo.get_for_language(KataLanguage('javascript'))
             mock_api.contents.assert_called_with(config.KATA_GITHUB_REPO_USER, config.KATA_GITHUB_REPO_REPO,
                                                  'javascript')
 
@@ -62,11 +62,11 @@ class TestKataTemplateRepo:
                                                       mock_dir_entry('java/template2')]
 
                     # When: Fetching the available templates for java
-                    java_available_templates = kata_template_repo.get_for_language('java')
+                    java_available_templates = kata_template_repo.get_for_language(KataLanguage('java'))
 
                     # Then: Only one is available and it is the root template (template_name == None)
-                    assert java_available_templates == [KataTemplate(language='java', template_name='template1'),
-                                                        KataTemplate(language='java', template_name='template2')]
+                    assert java_available_templates == [KataTemplate(KataLanguage('java'), template_name='template1'),
+                                                        KataTemplate(KataLanguage('java'), template_name='template2')]
 
                 def test_template_at_root(self,
                                           mock_api: MagicMock,
@@ -77,10 +77,10 @@ class TestKataTemplateRepo:
                                                       mock_dir_entry('rust/some_dir')]
 
                     # When: Fetching the available templates for rust
-                    rust_available_templates = kata_template_repo.get_for_language('rust')
+                    rust_available_templates = kata_template_repo.get_for_language(KataLanguage('rust'))
 
                     # Then: Only one is available and it is the root template (template_name == None)
-                    assert rust_available_templates == [KataTemplate(language='rust', template_name=None)]
+                    assert rust_available_templates == [KataTemplate(KataLanguage('rust'), template_name=None)]
 
             class TestInfoIsNotInConfig:
                 def test_check_if_has_readme(self,
@@ -96,11 +96,11 @@ class TestKataTemplateRepo:
                     mock_api.contents.return_value = [mock_file_entry('golang/README.md')]
 
                     # When: Fetching the available templates for java
-                    available_java_templates = kata_template_repo.get_for_language('golang')
+                    available_java_templates = kata_template_repo.get_for_language(KataLanguage('golang'))
 
                     # Then: Only one is available and it is the root template (template_name == None)
                     assert len(available_java_templates) == 1
-                    assert available_java_templates[0] == KataTemplate(language='golang', template_name=None)
+                    assert available_java_templates[0] == KataTemplate(KataLanguage('golang'), template_name=None)
 
         def test_template_is_not_at_root(self,
                                          mock_api: MagicMock,
@@ -110,8 +110,8 @@ class TestKataTemplateRepo:
                                               mock_dir_entry('java/hamcrest')]
 
             # When: Fetching the available templates for java
-            available_java_templates = kata_template_repo.get_for_language('java')
+            available_java_templates = kata_template_repo.get_for_language(KataLanguage('java'))
 
             # Then: All available templates are returned
-            assert available_java_templates == [KataTemplate('java', 'junit5'),
-                                                KataTemplate('java', 'hamcrest')]
+            assert available_java_templates == [KataTemplate(KataLanguage('java'), 'junit5'),
+                                                KataTemplate(KataLanguage('java'), 'hamcrest')]

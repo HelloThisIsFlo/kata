@@ -3,17 +3,17 @@ from typing import List
 
 from kata import config
 from kata.data.io.network import GithubApi
-from kata.domain.models import KataTemplate
+from kata.domain.models import KataTemplate, KataLanguage
 
 
 class KataTemplateRepo:
     def __init__(self, api: GithubApi):
         self._api = api
 
-    def get_for_language(self, language: str) -> List[KataTemplate]:
+    def get_for_language(self, language: KataLanguage) -> List[KataTemplate]:
         contents_of_language_root_dir = self._api.contents(config.KATA_GITHUB_REPO_USER,
                                                            config.KATA_GITHUB_REPO_REPO,
-                                                           language)
+                                                           language.name)
 
         if self._has_template_at_root(language, contents_of_language_root_dir):
             template_at_root = KataTemplate(language=language, template_name=None)
@@ -35,8 +35,8 @@ class KataTemplateRepo:
                     return True
             return False
 
-        if language in config.has_template_at_root:
-            return config.has_template_at_root[language]
+        if language.name in config.has_template_at_root:
+            return config.has_template_at_root[language.name]
         else:
             return has_readme()
 
@@ -63,9 +63,9 @@ class HardCodedKataTemplateRepo(KataTemplateRepo):
             ]
         }
 
-    def get_for_language(self, language: str) -> List[KataTemplate]:
+    def get_for_language(self, language: KataLanguage) -> List[KataTemplate]:
         def all_for_language_or_empty():
-            for template_name in self.available_templates.get(language, []):
+            for template_name in self.available_templates.get(language.name, []):
                 yield KataTemplate(language, template_name)
 
         return list(all_for_language_or_empty())
