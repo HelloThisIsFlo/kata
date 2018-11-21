@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kata import config
 from kata.data.repos import HardCoded
+from kata.defaults import DEFAULT_CONFIG
 from kata.domain.exceptions import InvalidKataName, KataLanguageNotFound, KataTemplateNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile, KataLanguage, KataTemplate
@@ -37,8 +37,12 @@ class TestInitKataService:
         return HardCoded.KataLanguageRepo()
 
     @pytest.fixture
-    def init_kata_service(self, kata_language_repo, kata_template_repo, mock_grepo):
-        return InitKataService(kata_language_repo, kata_template_repo, mock_grepo)
+    def config_repo(self):
+        return HardCoded.ConfigRepo()
+
+    @pytest.fixture
+    def init_kata_service(self, kata_language_repo, kata_template_repo, mock_grepo, config_repo):
+        return InitKataService(kata_language_repo, kata_template_repo, mock_grepo, config_repo)
 
     class TestInitKata:
         class TestValidCases:
@@ -62,8 +66,8 @@ class TestInitKataService:
                 # Then:
                 # - File URLs have been been fetched with the correct Username/GithubRepo/Subpath
                 mock_grepo.get_files_to_download.assert_called_with(
-                    user=config.KATA_GITHUB_REPO_USER,
-                    repo=config.KATA_GITHUB_REPO_REPO,
+                    user=DEFAULT_CONFIG['KataGRepo']['User'],
+                    repo=DEFAULT_CONFIG['KataGRepo']['Repo'],
                     path='java/junit5')
                 # - Files are requested to be downloaded in parent_dir/kata_name
                 #   Note: MOCK_FILES_TO_DOWNLOAD are set in the mock_grepo fixture initialization
@@ -89,8 +93,8 @@ class TestInitKataService:
 
                     # Then: File URLs have been been fetched with using the only available template name
                     mock_grepo.get_files_to_download.assert_called_with(
-                        user=config.KATA_GITHUB_REPO_USER,
-                        repo=config.KATA_GITHUB_REPO_REPO,
+                        user=DEFAULT_CONFIG['KataGRepo']['User'],
+                        repo=DEFAULT_CONFIG['KataGRepo']['Repo'],
                         path='java/junit5')
 
                 def test_only_one_template_at_root(self,
@@ -111,8 +115,8 @@ class TestInitKataService:
 
                     # Then: File URLs have been been fetched without any sub-path
                     mock_grepo.get_files_to_download.assert_called_with(
-                        user=config.KATA_GITHUB_REPO_USER,
-                        repo=config.KATA_GITHUB_REPO_REPO,
+                        user=DEFAULT_CONFIG['KataGRepo']['User'],
+                        repo=DEFAULT_CONFIG['KataGRepo']['Repo'],
                         path='java')
 
                 def test_default_specified_and_valid(self):

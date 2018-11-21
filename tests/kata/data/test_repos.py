@@ -6,9 +6,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kata import config
 from kata.data.io.file import FileReader
-from kata.data.repos import KataTemplateRepo, KataLanguageRepo, ConfigRepo
+from kata.data.repos import KataTemplateRepo, KataLanguageRepo, ConfigRepo, HardCoded
+from kata.defaults import DEFAULT_CONFIG
 from kata.domain.exceptions import InvalidConfig
 from kata.domain.models import KataTemplate, KataLanguage
 
@@ -41,28 +41,40 @@ def mock_api(mocked_api):
     return mocked_api
 
 
+@pytest.fixture
+@mock.patch('src.kata.data.io.file.FileReader')
+def mock_file_reader(mocked_file_reader):
+    return mocked_file_reader
+
+
+@pytest.fixture
+def config_repo():
+    return HardCoded.ConfigRepo()
+
+
 class TestKataTemplateRepo:
 
     @pytest.fixture
-    def kata_template_repo(self, mock_api):
-        config.has_template_at_root = {}
-        return KataTemplateRepo(mock_api)
+    def kata_template_repo(self, mock_api, config_repo):
+        return KataTemplateRepo(mock_api, config_repo)
 
     class TestGetForLanguage:
         def test_request_contents_of_language_directory(self,
                                                         mock_api: MagicMock,
                                                         kata_template_repo: KataTemplateRepo):
             kata_template_repo.get_for_language(KataLanguage('javascript'))
-            mock_api.contents.assert_called_with(config.KATA_GITHUB_REPO_USER, config.KATA_GITHUB_REPO_REPO,
+            mock_api.contents.assert_called_with(DEFAULT_CONFIG['KataGRepo']['User'],
+                                                 DEFAULT_CONFIG['KataGRepo']['Repo'],
                                                  'javascript')
 
         class TestTemplateIsAtRoot:
             class TestInfoIsInConfig:
                 def test_template_not_at_root(self,
                                               mock_api: MagicMock,
+                                              config_repo,
                                               kata_template_repo: KataTemplateRepo):
                     # Given: 'java' is explicitly stated as not having the template at its root
-                    config.has_template_at_root = {'java': False}
+                    config_repo.config['HasTemplateAtRoot'] = {'java': False}
                     mock_api.contents.return_value = [mock_file_entry('java/some_random_file.txt'),
                                                       mock_file_entry('java/README.md'),
                                                       mock_dir_entry('java/template1'),
@@ -77,9 +89,10 @@ class TestKataTemplateRepo:
 
                 def test_template_at_root(self,
                                           mock_api: MagicMock,
+                                          config_repo,
                                           kata_template_repo: KataTemplateRepo):
                     # Given: 'rust' is explicitly stated as having the template at its root
-                    config.has_template_at_root = {'rust': True}
+                    config_repo.config['HasTemplateAtRoot'] = {'rust': True}
                     mock_api.contents.return_value = [mock_file_entry('rust/some_random_file.txt'),
                                                       mock_dir_entry('rust/some_dir')]
 
@@ -92,6 +105,7 @@ class TestKataTemplateRepo:
             class TestInfoIsNotInConfig:
                 def test_check_if_has_readme(self,
                                              mock_api: MagicMock,
+                                             config_repo,
                                              kata_template_repo: KataTemplateRepo):
                     # If there's no information in the config whether this language has its template at root,
                     # try to guess by checking if there's a 'README.md' in the language root dir
@@ -99,7 +113,7 @@ class TestKataTemplateRepo:
                     # Given:
                     # - 'golang' isn't included in the list of languages w/ a template at root
                     # - there's a 'README.md' at 'golang' dir root
-                    config.has_template_at_root = {}
+                    config_repo.config['HasTemplateAtRoot'] = {}
                     mock_api.contents.return_value = [mock_file_entry('golang/README.md')]
 
                     # When: Fetching the available templates for java
@@ -127,17 +141,16 @@ class TestKataTemplateRepo:
 class TestKataLanguageRepo:
 
     @pytest.fixture
-    def kata_language_repo(self, mock_api):
-        config.has_template_at_root = {}
-        return KataLanguageRepo(mock_api)
+    def kata_language_repo(self, mock_api, config_repo):
+        return KataLanguageRepo(mock_api, config_repo)
 
     class TestGetAll:
         def test_request_contents_of_root_directory(self,
                                                     mock_api: MagicMock,
                                                     kata_language_repo: KataLanguageRepo):
             kata_language_repo.get_all()
-            mock_api.contents.assert_called_with(config.KATA_GITHUB_REPO_USER,
-                                                 config.KATA_GITHUB_REPO_REPO,
+            mock_api.contents.assert_called_with(DEFAULT_CONFIG['KataGRepo']['User'],
+                                                 DEFAULT_CONFIG['KataGRepo']['Repo'],
                                                  '')
 
         def test_return_all_directory_as_kata_languages(self,
@@ -156,8 +169,8 @@ class TestKataLanguageRepo:
                                                     mock_api: MagicMock,
                                                     kata_language_repo: KataLanguageRepo):
             kata_language_repo.get(language_name='java')
-            mock_api.contents.assert_called_with(config.KATA_GITHUB_REPO_USER,
-                                                 config.KATA_GITHUB_REPO_REPO,
+            mock_api.contents.assert_called_with(DEFAULT_CONFIG['KataGRepo']['User'],
+                                                 DEFAULT_CONFIG['KataGRepo']['Repo'],
                                                  '')
 
         def test_valid_language_name(self,
@@ -180,11 +193,6 @@ class TestKataLanguageRepo:
 
 
 class TestConfigRepo:
-    @pytest.fixture
-    @mock.patch('src.kata.data.io.file.FileReader')
-    def mock_file_reader(self, mocked_file_reader):
-        return mocked_file_reader
-
     @pytest.fixture
     def valid_config(self):
         return {'KataGRepo': {'User': 'some_user',
@@ -240,8 +248,6 @@ class TestConfigRepo:
             assert config_repo.has_template_at_root(KataLanguage('csharp')) is None
 
     class TestConfigValidation:
-        # TODO: - Also test that if config isn't found, it creates it and loads with defaults
-
         @pytest.fixture
         def assert_given_config_raises_when_calling_given_method(self, mock_file_reader):
             def wrapper(config: dict,
@@ -344,3 +350,6 @@ class TestConfigRepo:
             assert config_repo.has_template_at_root(KataLanguage('java')) is False
             assert config_repo.has_template_at_root(KataLanguage('elixir')) is True
             assert config_repo.has_template_at_root(KataLanguage('csharp')) is None
+
+        def test_missing_config_file_then_create_with_defaults(self):
+            pytest.skip('TODO')
