@@ -2,6 +2,8 @@ import re
 from pathlib import Path
 from typing import List, Optional
 
+import schema
+
 from kata import config
 from kata.data.io.file import FileReader
 from kata.data.io.network import GithubApi
@@ -96,15 +98,13 @@ class ConfigRepo:
         return self._config['HasTemplateAtRoot'].get(language.name, None)
 
     def _validate_config(self):
-        config = self._config
-        if 'KataGRepo' not in config:
-            raise InvalidConfig(f"Missing config entry: 'KataGRepo'")
-
-        if 'User' not in config['KataGRepo']:
-            raise InvalidConfig(f"Missing config entry: 'KataGRepo -> User'")
-
-        if 'Repo' not in config['KataGRepo']:
-            raise InvalidConfig(f"Missing config entry: 'KataGRepo -> Repo'")
+        expected_schema = schema.Schema({'KataGRepo': {'User': str,
+                                                       'Repo': str},
+                                         'HasTemplateAtRoot': {schema.Optional(str): bool}})
+        try:
+            expected_schema.validate(self._config)
+        except schema.SchemaError as error:
+            raise InvalidConfig(error)
 
 
 class HardCoded:

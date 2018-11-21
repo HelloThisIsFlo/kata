@@ -29,7 +29,8 @@ setup(
     install_requires=[
         'click',
         'requests',
-        'pyyaml'
+        'pyyaml',
+        'schema'
     ],
     include_package_data=True
 )

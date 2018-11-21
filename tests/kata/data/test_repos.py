@@ -1,5 +1,6 @@
 import textwrap
 from pathlib import Path
+from typing import List
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -202,17 +203,21 @@ class TestConfigRepo:
         mock_file_reader.read_yaml.assert_called_with(config_file)
 
     class TestGetKataGRepoInfos:
-        def test_get_kata_grepo_username(self, mock_file_reader):
+        def test_get_kata_grepo_username(self, valid_config, mock_file_reader):
             config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
-            mock_file_reader.read_yaml.return_value = {'KataGRepo': {'User': 'my_username',
-                                                                     'Repo': 'my_repo_name'}}
+            config = valid_config
+            config['KataGRepo'] = {'User': 'my_username',
+                                   'Repo': 'my_repo_name'}
+            mock_file_reader.read_yaml.return_value = config
             config_repo = ConfigRepo(config_file, mock_file_reader)
             assert config_repo.get_kata_grepo_username() == 'my_username'
 
-        def test_get_kata_grepo_reponame(self, mock_file_reader):
+        def test_get_kata_grepo_reponame(self, valid_config, mock_file_reader):
             config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
-            mock_file_reader.read_yaml.return_value = {'KataGRepo': {'User': 'my_username',
-                                                                     'Repo': 'my_repo_name'}}
+            config = valid_config
+            config['KataGRepo'] = {'User': 'my_username',
+                                   'Repo': 'my_repo_name'}
+            mock_file_reader.read_yaml.return_value = config
             config_repo = ConfigRepo(config_file, mock_file_reader)
             assert config_repo.get_kata_grepo_reponame() == 'my_repo_name'
 
@@ -235,41 +240,78 @@ class TestConfigRepo:
             assert config_repo.has_template_at_root(KataLanguage('csharp')) is None
 
     class TestConfigValidation:
-        # TODO: - Add validation w/ schema (even maybe usign external lib: https://github.com/keleshev/schema)
         # TODO: - Also test that if config isn't found, it creates it and loads with defaults
 
-        def test_missing_katagrepo_entry(self, mock_file_reader):
-            config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
-            mock_file_reader.read_yaml.return_value = {}  # Missing 'KataGRepo' entry
+        @pytest.fixture
+        def assert_given_config_raises_when_calling_given_method(self, mock_file_reader):
+            def wrapper(config: dict,
+                        method_to_call,
+                        method_args,
+                        regexes_to_match: List[str]):
+                # Given: Config is mocked
+                config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
+                mock_file_reader.read_yaml.return_value = config
 
-            with pytest.raises(InvalidConfig) as error:
-                config_repo = ConfigRepo(config_file, mock_file_reader)
-                config_repo.get_kata_grepo_reponame()
-            assert error.match("Missing config entry: 'KataGRepo'")
+                # When: Instanciating Repo and calling method
+                # Then: Exception is thrown and msg matches regexes
+                exception_to_raise = InvalidConfig
+                with pytest.raises(exception_to_raise) as exception:
+                    config_repo = ConfigRepo(config_file, mock_file_reader)
+                    method = getattr(config_repo, method_to_call)
+                    method(*method_args)
+                for regex_to_match in regexes_to_match:
+                    assert exception.match(regex_to_match)
 
-            with pytest.raises(InvalidConfig) as error:
-                config_repo = ConfigRepo(config_file, mock_file_reader)
-                config_repo.get_kata_grepo_username()
-            assert error.match("Missing config entry: 'KataGRepo'")
+            return wrapper
 
-        def test_missing_2nd_level_entries(self, mock_file_reader):
-            config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
+        def test_missing_katagrepo_entry(self, valid_config, assert_given_config_raises_when_calling_given_method):
+            def config_wo_katagrepo():
+                conf = valid_config
+                conf.pop('KataGRepo')
+                return conf
 
-            with pytest.raises(InvalidConfig) as error:
-                mock_file_reader.read_yaml.return_value = {'KataGRepo': {'User': 'NotUsed'}}  # Missing 'Repo'
-                config_repo = ConfigRepo(config_file, mock_file_reader)
-                config_repo.get_kata_grepo_reponame()
-            assert error.match("Missing config entry: 'KataGRepo -> Repo'")
+            assert_given_config_raises_when_calling_given_method(
+                config=config_wo_katagrepo(),
+                method_to_call='get_kata_grepo_username',
+                method_args=(),
+                regexes_to_match=[r'KataGRepo', r'Missing'])
 
-            with pytest.raises(InvalidConfig) as error:
-                mock_file_reader.read_yaml.return_value = {'KataGRepo': {'Repo': 'NotUsed'}}  # Missing 'User'
-                config_repo = ConfigRepo(config_file, mock_file_reader)
-                config_repo.get_kata_grepo_username()
-            assert error.match("Missing config entry: 'KataGRepo -> User'")
+        def test_missing_user_entry(self, valid_config, assert_given_config_raises_when_calling_given_method):
+            def config_wo_user():
+                conf = valid_config
+                conf['KataGRepo'].pop('User')
+                return conf
 
-        def test_do_not_forget_to_implement_the_rest(self):
-            pytest.skip("Skipping further validation tests for now."
-                        "We'll implement all at once with schema validation")
+            assert_given_config_raises_when_calling_given_method(
+                config=config_wo_user(),
+                method_to_call='get_kata_grepo_username',
+                method_args=(),
+                regexes_to_match=[r'User', r'Missing'])
+
+        def test_missing_repo_entry(self, valid_config, assert_given_config_raises_when_calling_given_method):
+            def config_wo_repo():
+                conf = valid_config
+                conf['KataGRepo'].pop('Repo')
+                return conf
+
+            assert_given_config_raises_when_calling_given_method(
+                config=config_wo_repo(),
+                method_to_call='get_kata_grepo_reponame',
+                method_args=(),
+                regexes_to_match=[r'Repo', r'Missing'])
+
+        def test_missing_hastemplateatroot_entry(self, valid_config,
+                                                 assert_given_config_raises_when_calling_given_method):
+            def config_wo_hastemplateatroot():
+                conf = valid_config
+                conf.pop('HasTemplateAtRoot')
+                return conf
+
+            assert_given_config_raises_when_calling_given_method(
+                config=config_wo_hastemplateatroot(),
+                method_to_call='has_template_at_root',
+                method_args=(KataLanguage('java')),
+                regexes_to_match=[r'HasTemplateAtRoot', r'Missing'])
 
     class TestIntegration:
         def test_valid_config(self, tmp_path: Path):
