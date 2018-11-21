@@ -1,8 +1,11 @@
 import re
+from pathlib import Path
 from typing import List, Optional
 
 from kata import config
+from kata.data.io.file import FileReader
 from kata.data.io.network import GithubApi
+from kata.domain.exceptions import InvalidConfig
 from kata.domain.models import KataTemplate, KataLanguage
 
 
@@ -72,6 +75,36 @@ class KataLanguageRepo:
         for language in all_languages:
             if language.name == language_name:
                 return language
+
+
+class ConfigRepo:
+    def __init__(self, config_file: Path, file_reader: FileReader):
+        self._file_reader = file_reader
+        self._config = self._file_reader.read_yaml(config_file)
+        self._validate_config()
+
+    def get_kata_grepo_username(self) -> str:
+        return self._config['KataGRepo']['User']
+
+    def get_kata_grepo_reponame(self) -> str:
+        return self._config['KataGRepo']['Repo']
+
+    def has_template_at_root(self, language: KataLanguage) -> Optional[bool]:
+        """
+        :return: True if yes, False if no, None if unknown
+        """
+        return self._config['HasTemplateAtRoot'].get(language.name, None)
+
+    def _validate_config(self):
+        config = self._config
+        if 'KataGRepo' not in config:
+            raise InvalidConfig(f"Missing config entry: 'KataGRepo'")
+
+        if 'User' not in config['KataGRepo']:
+            raise InvalidConfig(f"Missing config entry: 'KataGRepo -> User'")
+
+        if 'Repo' not in config['KataGRepo']:
+            raise InvalidConfig(f"Missing config entry: 'KataGRepo -> Repo'")
 
 
 class HardCoded:

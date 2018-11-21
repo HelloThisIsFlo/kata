@@ -22,3 +22,7 @@ class KataLanguageNotFound(KataError):
 class KataTemplateNotFound(KataError):
     def __init__(self, available_templates: List[KataTemplate] = None):
         self.available_templates = available_templates
+
+
+class InvalidConfig(KataError):
+    pass

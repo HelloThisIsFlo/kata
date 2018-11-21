@@ -28,7 +28,8 @@ setup(
     scripts=['bin/kata'],
     install_requires=[
         'click',
-        'requests'
+        'requests',
+        'pyyaml'
     ],
     include_package_data=True
 )

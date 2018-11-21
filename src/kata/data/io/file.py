@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import yaml
+
 
 class FileWriter:
     @staticmethod
@@ -14,3 +16,10 @@ class FileWriter:
         file_full_path = root_dir / file_sub_path
         create_dir_hierarchy_if_does_not_exist()
         write_to_file()
+
+
+class FileReader:
+    @staticmethod
+    def read_yaml(file_path: Path) -> dict:
+        with file_path.open('r') as f:
+            return yaml.load(f)
