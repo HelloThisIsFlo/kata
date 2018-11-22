@@ -26,3 +26,12 @@ class KataTemplateNotFound(KataError):
 
 class InvalidConfig(KataError):
     pass
+
+
+class ApiError(KataError):
+    pass
+
+
+class ApiLimitReached(ApiError):
+    def __init__(self):
+        super().__init__("Api limit has been reached")

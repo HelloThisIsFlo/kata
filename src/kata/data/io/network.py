@@ -1,5 +1,7 @@
 import requests
 
+from kata.domain.exceptions import ApiLimitReached
+
 
 class GithubApi:
     """
@@ -14,6 +16,8 @@ class GithubApi:
         if path:
             url += f'/{path}'
 
+        # X - RateLimit - Limit
+        # 403
         response = self._get_url(url)
         return response.json()
 
@@ -23,5 +27,20 @@ class GithubApi:
 
     def _get_url(self, url: str):
         response = self._requests.get(url)
-        response.raise_for_status()
+        self._validate_response(response)
         return response
+
+    @staticmethod
+    def _validate_response(response: requests.Response):
+        def rate_limit_reached():
+            def unauthorised():
+                return response.status_code == 403
+
+            def limit_reached():
+                return int(response.headers.get('X-RateLimit-Remaining', -1)) == 0
+
+            return unauthorised() and limit_reached()
+
+        if rate_limit_reached():
+            raise ApiLimitReached()
+        response.raise_for_status()
