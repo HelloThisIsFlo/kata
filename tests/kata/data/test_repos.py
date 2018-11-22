@@ -5,8 +5,10 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+import yaml
 
-from kata.data.io.file import FileReader
+from kata import defaults
+from kata.data.io.file import FileReader, FileWriter
 from kata.data.repos import KataTemplateRepo, KataLanguageRepo, ConfigRepo, HardCoded
 from kata.defaults import DEFAULT_CONFIG
 from kata.domain.exceptions import InvalidConfig
@@ -45,6 +47,12 @@ def mock_api(mocked_api):
 @mock.patch('src.kata.data.io.file.FileReader')
 def mock_file_reader(mocked_file_reader):
     return mocked_file_reader
+
+
+@pytest.fixture
+@mock.patch('src.kata.data.io.file.FileWriter')
+def mock_file_writer(mocked_file_writer):
+    return mocked_file_writer
 
 
 @pytest.fixture
@@ -199,44 +207,44 @@ class TestConfigRepo:
                               'Repo': 'some_repo'},
                 'HasTemplateAtRoot': {'python': False}}
 
-    def test_load_config_at_initialization(self, valid_config, mock_file_reader):
+    def test_load_config_at_initialization(self, valid_config, mock_file_reader, mock_file_writer):
         # Given: A config file path with valid config
         config_file = Path('config_file.yaml')
         mock_file_reader.read_yaml.return_value = valid_config
 
         # When: Initializing repo
-        _config_repo = ConfigRepo(config_file, mock_file_reader)
+        _config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
 
         # Then: Config file has been loaded
         mock_file_reader.read_yaml.assert_called_with(config_file)
 
     class TestGetKataGRepoInfos:
-        def test_get_kata_grepo_username(self, valid_config, mock_file_reader):
+        def test_get_kata_grepo_username(self, valid_config, mock_file_reader, mock_file_writer):
             config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
             config = valid_config
             config['KataGRepo'] = {'User': 'my_username',
                                    'Repo': 'my_repo_name'}
             mock_file_reader.read_yaml.return_value = config
-            config_repo = ConfigRepo(config_file, mock_file_reader)
+            config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
             assert config_repo.get_kata_grepo_username() == 'my_username'
 
-        def test_get_kata_grepo_reponame(self, valid_config, mock_file_reader):
+        def test_get_kata_grepo_reponame(self, valid_config, mock_file_reader, mock_file_writer):
             config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
             config = valid_config
             config['KataGRepo'] = {'User': 'my_username',
                                    'Repo': 'my_repo_name'}
             mock_file_reader.read_yaml.return_value = config
-            config_repo = ConfigRepo(config_file, mock_file_reader)
+            config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
             assert config_repo.get_kata_grepo_reponame() == 'my_repo_name'
 
     class TestHasTemplateAtRoot:
         @pytest.fixture
-        def config_repo(self, mock_file_reader, valid_config):
+        def config_repo(self, mock_file_reader, valid_config, mock_file_writer):
             config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
             valid_config['HasTemplateAtRoot'] = {'java': False,
                                                  'elixir': True}
             mock_file_reader.read_yaml.return_value = valid_config
-            return ConfigRepo(config_file, mock_file_reader)
+            return ConfigRepo(config_file, mock_file_reader, mock_file_writer)
 
         def test_has_template(self, config_repo: ConfigRepo):
             assert config_repo.has_template_at_root(KataLanguage('java')) is False
@@ -249,7 +257,7 @@ class TestConfigRepo:
 
     class TestConfigValidation:
         @pytest.fixture
-        def assert_given_config_raises_when_calling_given_method(self, mock_file_reader):
+        def assert_given_config_raises_when_calling_given_method(self, mock_file_reader, mock_file_writer):
             def wrapper(config: dict,
                         method_to_call,
                         method_args,
@@ -262,7 +270,7 @@ class TestConfigRepo:
                 # Then: Exception is thrown and msg matches regexes
                 exception_to_raise = InvalidConfig
                 with pytest.raises(exception_to_raise) as exception:
-                    config_repo = ConfigRepo(config_file, mock_file_reader)
+                    config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
                     method = getattr(config_repo, method_to_call)
                     method(*method_args)
                 for regex_to_match in regexes_to_match:
@@ -327,7 +335,8 @@ class TestConfigRepo:
 
             def create_config_repo():
                 actual_file_reader = FileReader()
-                return ConfigRepo(config_file, actual_file_reader)
+                actual_file_writer = FileWriter()
+                return ConfigRepo(config_file, actual_file_reader, actual_file_writer)
 
             # Given: A valid config in a real file
             config_file = tmp_path / 'config.yml'
@@ -351,5 +360,26 @@ class TestConfigRepo:
             assert config_repo.has_template_at_root(KataLanguage('elixir')) is True
             assert config_repo.has_template_at_root(KataLanguage('csharp')) is None
 
-        def test_missing_config_file_then_create_with_defaults(self):
-            pytest.skip('TODO')
+        def test_missing_config_file_then_create_with_defaults(self, tmp_path: Path):
+            # Given: A config path to a non-existing file
+            config_path = tmp_path / 'config.yaml'
+            assert not config_path.exists()
+
+            # When: Instanciating ConfigRepo
+            actual_file_reader = FileReader()
+            actual_file_writer = FileWriter()
+            config_repo = ConfigRepo(config_path, actual_file_reader, actual_file_writer)
+
+            # Then:
+            #  - Config exist w/ defaults
+            assert config_path.exists()
+            with config_path.open('r') as config_file:
+                assert yaml.load(config_file) == defaults.DEFAULT_CONFIG
+
+            #  - Defaults are loaded
+            assert config_repo.get_kata_grepo_username() == defaults.DEFAULT_CONFIG['KataGRepo']['User']
+            assert config_repo.get_kata_grepo_reponame() == defaults.DEFAULT_CONFIG['KataGRepo']['Repo']
+            for language_name in defaults.DEFAULT_CONFIG['HasTemplateAtRoot']:
+                assert config_repo.has_template_at_root(KataLanguage(language_name)) \
+                       is defaults.DEFAULT_CONFIG['HasTemplateAtRoot'][language_name]
+            assert config_repo.has_template_at_root(KataLanguage('fakelanguagethatdoesntexist')) is None

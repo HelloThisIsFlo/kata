@@ -4,16 +4,20 @@ from typing import List, Optional
 
 import schema
 
-from kata.data.io.file import FileReader
+from kata import defaults
+from kata.data.io.file import FileReader, FileWriter
 from kata.data.io.network import GithubApi
 from kata.domain.exceptions import InvalidConfig
 from kata.domain.models import KataTemplate, KataLanguage
 
 
 class ConfigRepo:
-    def __init__(self, config_file: Path, file_reader: FileReader):
+    def __init__(self, config_file: Path, file_reader: FileReader, file_writer: FileWriter):
         self._file_reader = file_reader
-        self._config = self._file_reader.read_yaml(config_file)
+        self._file_writer = file_writer
+
+        self._create_config_file_with_defaults_if_doesnt_exist(config_file)
+        self._load_config(config_file)
         self._validate_config()
 
     def get_kata_grepo_username(self) -> str:
@@ -27,6 +31,13 @@ class ConfigRepo:
         :return: True if yes, False if no, None if unknown
         """
         return self._config['HasTemplateAtRoot'].get(language.name, None)
+
+    def _create_config_file_with_defaults_if_doesnt_exist(self, config_file):
+        if not config_file.exists():
+            self._file_writer.write_yaml_to_file(config_file, defaults.DEFAULT_CONFIG)
+
+    def _load_config(self, config_file):
+        self._config = self._file_reader.read_yaml(config_file)
 
     def _validate_config(self):
         expected_schema = schema.Schema({'KataGRepo': {'User': str,

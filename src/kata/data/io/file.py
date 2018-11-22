@@ -17,6 +17,11 @@ class FileWriter:
         create_dir_hierarchy_if_does_not_exist()
         write_to_file()
 
+    @staticmethod
+    def write_yaml_to_file(file_path: Path, yaml_data: dict):
+        with file_path.open('w') as f:
+            yaml.dump(yaml_data, f, default_flow_style=False)
+
 
 class FileReader:
     @staticmethod

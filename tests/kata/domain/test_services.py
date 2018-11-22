@@ -120,6 +120,7 @@ class TestInitKataService:
                         path='java')
 
                 def test_default_specified_and_valid(self):
+                    # TODO: Test the valid case: No explicit template name, but default is specified and valid
                     pytest.skip('TODO')
 
         class TestEdgeCases:
@@ -209,6 +210,10 @@ class TestInitKataService:
                     assert template_not_found_error.value.available_templates == \
                            [KataTemplate(KataLanguage('java'), 'junit5'),
                             KataTemplate(KataLanguage('java'), 'hamcrest')]
+
+                def test_default_template_is_invalid(self):
+                    # TODO: Test when default template is invalid
+                    pytest.skip('TODO')
 
     class TestListLanguages:
         def test_valid_case(self,

@@ -5,19 +5,29 @@ from typing import List
 
 import click
 
-from kata.data.io.file import FileWriter
+from kata.data.io.file import FileWriter, FileReader
 from kata.data.io.network import GithubApi
-from kata.data.repos import KataTemplateRepo, KataLanguageRepo
+from kata.data.repos import KataTemplateRepo, KataLanguageRepo, ConfigRepo
 from kata.domain.exceptions import KataError, KataLanguageNotFound, KataTemplateNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile
 from kata.domain.services import InitKataService
 
+SANDBOX = Path('./sandbox')
+
 
 @click.group()
 @click.pass_context
 def cli(ctx: click.Context):
-    main = Main()
+    config_file_path_as_string = '~/.katacli'
+    config_file = Path(config_file_path_as_string).expanduser()
+    if not config_file.exists():
+        print_warning('Config file was not found!')
+        print_warning('')
+        print_warning('A new config file will be created and loaded with default settings.')
+        print_warning(f"Config file location: '{config_file_path_as_string}'")
+        print_warning('')
+    main = KataMainContext(config_file)
     ctx.obj = main
 
 
@@ -43,7 +53,7 @@ def print_normal(msg):
 @click.argument('template_language')
 @click.argument('template_name', required=False)
 def init(ctx: click.Context, kata_name, template_language, template_name):
-    main_ctx: Main = ctx.obj
+    main_ctx: KataMainContext = ctx.obj
 
     current_dir = Path('.')
     print_normal(f"Initializing Kata in './{kata_name}'")
@@ -52,7 +62,7 @@ def init(ctx: click.Context, kata_name, template_language, template_name):
     print_normal("")
     try:
         main_ctx.init_kata_service.init_kata(current_dir, kata_name, template_language, template_name)
-        print_success("Done!")
+        print_success('Done!')
 
     except KataLanguageNotFound as lang_not_found:
         print_error(f"Language '{template_language}' could not be found!")
@@ -93,7 +103,7 @@ def list(_ctx: click.Context):
 @list.command()
 @click.pass_context
 def languages(ctx: click.Context):
-    main_ctx: Main = ctx.obj
+    main_ctx: KataMainContext = ctx.obj
     try:
         available_kata_languages = main_ctx.init_kata_service.list_available_languages()
         print_normal("Available languages:")
@@ -108,7 +118,7 @@ def languages(ctx: click.Context):
 @click.pass_context
 @click.argument('language')
 def templates(ctx: click.Context, language):
-    main_ctx: Main = ctx.obj
+    main_ctx: KataMainContext = ctx.obj
     try:
         available_kata_templates = main_ctx.init_kata_service.list_available_templates(language)
         print_normal(f"Available templates for '{language}':")
@@ -138,7 +148,7 @@ def debug(_ctx: click.Context):
 @click.argument('sub_path_in_repo', default='')
 @click.pass_context
 def explore(ctx: click.Context, github_user, repo, sub_path_in_repo):
-    main_ctx: Main = ctx.obj
+    main_ctx: KataMainContext = ctx.obj
     click.echo('Debug - Print all files in repo')
     click.echo('')
     click.echo('Exploring:')
@@ -158,28 +168,60 @@ def explore(ctx: click.Context, github_user, repo, sub_path_in_repo):
 @click.argument('sub_path_in_repo', default='')
 @click.pass_context
 def download(ctx: click.Context, github_user, repo, sub_path_in_repo):
-    sandbox = Path('./sandbox')
-    if not sandbox.exists():
+    if not SANDBOX.exists():
         raise KataError("Please create an empty './sandbox' directory before proceeding")
-    for _ in sandbox.iterdir():
+    for _ in SANDBOX.iterdir():
         raise KataError("Please create an EMPTY './sandbox' directory before proceeding")
 
-    main_ctx: Main = ctx.obj
-    click.echo(f'Sandbox: {sandbox.absolute()}')
+    main_ctx: KataMainContext = ctx.obj
+    click.echo(f'Sandbox: {SANDBOX.absolute()}')
 
     repo_files: List[DownloadableFile] = main_ctx.grepo.get_files_to_download(github_user, repo, sub_path_in_repo)
     click.echo('Finished fetching the list. Writing to drive now')
-    main_ctx.grepo.download_files_at_location(sandbox, repo_files)
+    main_ctx.grepo.download_files_at_location(SANDBOX, repo_files)
     click.echo('Done! (probably ^_^)')
 
 
-class Main:
-    def __init__(self):
-        self.executor = ThreadPoolExecutor(100)
-        self.api = GithubApi()
-        self.file_writer = FileWriter()
-        self.grepo = GRepo(self.api, self.file_writer, self.executor)
-        # self.kata_template_repo = HardCodedKataTemplateRepo()
-        self.kata_template_repo = KataTemplateRepo(self.api)
-        self.kata_language_repo = KataLanguageRepo(self.api)
-        self.init_kata_service = InitKataService(self.kata_language_repo, self.kata_template_repo, self.grepo)
+@debug.command()
+def debug():
+    p = Path('~/.katacli').expanduser()
+    print_normal(p.absolute())
+
+
+class KataMainContext:
+    file_reader: FileReader
+    file_writer: FileWriter
+    api: GithubApi
+    executor: ThreadPoolExecutor
+
+    config_repo: ConfigRepo
+    kata_template_repo: KataTemplateRepo
+    kata_language_repo: KataLanguageRepo
+
+    grepo: GRepo
+    init_kata_service: InitKataService
+
+    def __init__(self, config_file):
+        self.config_file = config_file
+
+        def init_base_deps():
+            self.executor = ThreadPoolExecutor(100)
+            self.api = GithubApi()
+            self.file_writer = FileWriter()
+            self.file_reader = FileReader()
+
+        def init_repos():
+            self.config_repo = ConfigRepo(self.config_file, self.file_reader, self.file_writer)
+            self.kata_template_repo = KataTemplateRepo(self.api, self.config_repo)
+            self.kata_language_repo = KataLanguageRepo(self.api, self.config_repo)
+
+        def init_domain():
+            self.grepo = GRepo(self.api, self.file_writer, self.executor)
+            self.init_kata_service = InitKataService(self.kata_language_repo,
+                                                     self.kata_template_repo,
+                                                     self.grepo,
+                                                     self.config_repo)
+
+        init_base_deps()
+        init_repos()
+        init_domain()
