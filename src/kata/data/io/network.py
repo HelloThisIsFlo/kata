@@ -16,8 +16,6 @@ class GithubApi:
         if path:
             url += f'/{path}'
 
-        # X - RateLimit - Limit
-        # 403
         response = self._get_url(url)
         return response.json()
 

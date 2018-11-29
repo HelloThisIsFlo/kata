@@ -32,6 +32,11 @@ class ConfigRepo:
         """
         return self._config['HasTemplateAtRoot'].get(language.name, None)
 
+    def get_auth_token(self) -> Optional[str]:
+        if 'Auth' not in self._config:
+            return None
+        return self._config['Auth']['Token']
+
     def _create_config_file_with_defaults_if_doesnt_exist(self, config_file):
         if not config_file.exists():
             self._file_writer.write_yaml_to_file(config_file, defaults.DEFAULT_CONFIG)
@@ -42,7 +47,8 @@ class ConfigRepo:
     def _validate_config(self):
         expected_schema = schema.Schema({'KataGRepo': {'User': str,
                                                        'Repo': str},
-                                         'HasTemplateAtRoot': {schema.Optional(str): bool}})
+                                         'HasTemplateAtRoot': {schema.Optional(str): bool},
+                                         schema.Optional('Auth'): {'Token': str}})
         try:
             expected_schema.validate(self._config)
         except schema.SchemaError as error:
