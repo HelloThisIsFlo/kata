@@ -88,3 +88,11 @@ class InitKataService:
         if kata_template.template_name:
             path += '/' + kata_template.template_name
         return path
+
+
+class LoginService:
+    def __init__(self, config_repo: ConfigRepo):
+        self._config_repo = config_repo
+
+    def is_logged_in(self) -> bool:
+        return self._config_repo.get_auth_token() is not None

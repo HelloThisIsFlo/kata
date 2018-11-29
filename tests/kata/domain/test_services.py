@@ -10,7 +10,7 @@ from kata.defaults import DEFAULT_CONFIG
 from kata.domain.exceptions import InvalidKataName, KataLanguageNotFound, KataTemplateNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile, KataLanguage, KataTemplate
-from kata.domain.services import InitKataService
+from kata.domain.services import InitKataService, LoginService
 
 NOT_USED = 'Not Used'
 VALID_KATA_NAME = 'kata_name'
@@ -18,6 +18,11 @@ VALID_KATA_NAME = 'kata_name'
 MOCK_FILES_TO_DOWNLOAD = [DownloadableFile(Path('fake.txt'), 'http://hello.com/fake.txt'),
                           DownloadableFile(Path('hey/fake.txt'), 'http://hello.com/hey/fake.txt'),
                           DownloadableFile(Path('hey/fake.md'), 'http://hello.com/hey/fake.md')]
+
+
+@pytest.fixture
+def config_repo():
+    return HardCoded.ConfigRepo()
 
 
 class TestInitKataService:
@@ -35,10 +40,6 @@ class TestInitKataService:
     @pytest.fixture
     def kata_language_repo(self):
         return HardCoded.KataLanguageRepo()
-
-    @pytest.fixture
-    def config_repo(self):
-        return HardCoded.ConfigRepo()
 
     @pytest.fixture
     def init_kata_service(self, kata_language_repo, kata_template_repo, mock_grepo, config_repo):
@@ -243,3 +244,18 @@ class TestInitKataService:
             with pytest.raises(KataLanguageNotFound) as language_not_found_error:
                 init_kata_service.list_available_templates('python')
             assert language_not_found_error.value.available_languages == [KataLanguage('java')]
+
+
+class TestLoginService:
+    @pytest.fixture
+    def login_service(self, config_repo):
+        return LoginService(config_repo)
+
+    class TestIsLoggedIn:
+        def test_is_logged_in(self, login_service, config_repo: HardCoded.ConfigRepo):
+            config_repo.config['Auth'] = {'Token': 'TOKEN1234'}
+            assert login_service.is_logged_in() is True
+
+        def test_not_logged_in(self, login_service, config_repo: HardCoded.ConfigRepo):
+            config_repo.config.pop('Auth', None)
+            assert login_service.is_logged_in() is False
