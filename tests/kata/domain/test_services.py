@@ -257,5 +257,7 @@ class TestLoginService:
             assert login_service.is_logged_in() is True
 
         def test_not_logged_in(self, login_service, config_repo: HardCoded.ConfigRepo):
-            config_repo.config.pop('Auth', None)
+            # As of now, 'Token' isn't by default in the 'valid_config',
+            # but still popping to make the test resilient to future changes
+            config_repo.config['Auth'].pop('Token', None)
             assert login_service.is_logged_in() is False

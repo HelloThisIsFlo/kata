@@ -33,7 +33,7 @@ class ConfigRepo:
         return self._config['HasTemplateAtRoot'].get(language.name, None)
 
     def get_auth_token(self) -> Optional[str]:
-        if 'Auth' not in self._config:
+        if 'Token' not in self._config['Auth']:
             return None
         return self._config['Auth']['Token']
 
@@ -48,7 +48,7 @@ class ConfigRepo:
         expected_schema = schema.Schema({'KataGRepo': {'User': str,
                                                        'Repo': str},
                                          'HasTemplateAtRoot': {schema.Optional(str): bool},
-                                         schema.Optional('Auth'): {'Token': str}})
+                                         'Auth': {schema.Optional('Token'): str}})
         try:
             expected_schema.validate(self._config)
         except schema.SchemaError as error:
@@ -173,10 +173,5 @@ class HardCoded:
 
     class ConfigRepo(ConfigRepo):
         def __init__(self):
-            self._config = {
-                'KataGRepo': {'User': 'swkBerlin',
-                              'Repo': 'kata-bootstraps'},
-
-                'HasTemplateAtRoot': {'java': False}
-            }
+            self._config = defaults.DEFAULT_CONFIG
             self.config = self._config

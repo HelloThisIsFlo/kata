@@ -205,7 +205,9 @@ class TestConfigRepo:
     def valid_config(self):
         return {'KataGRepo': {'User': 'some_user',
                               'Repo': 'some_repo'},
-                'HasTemplateAtRoot': {'python': False}}
+                'HasTemplateAtRoot': {'python': False},
+                'Auth': {}}
+        # 'Auth': {'SkipNotLoggedInWarning': False}}
 
     def test_load_config_at_initialization(self, valid_config, mock_file_reader, mock_file_writer):
         # Given: A config file path with valid config
@@ -256,39 +258,47 @@ class TestConfigRepo:
             assert config_repo.has_template_at_root(KataLanguage('csharp')) is None
 
     class TestAuthInfos:
-        def test_get_auth_token__valid_token(self, valid_config, mock_file_reader, mock_file_writer):
-            # Given: Token is valid
-            config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
-            config = valid_config
-            config['Auth'] = {'Token': 'TOKEN1234'}
-            mock_file_reader.read_yaml.return_value = config
+        class TestGetAuthToken:
+            def test_valid_token(self, valid_config, mock_file_reader, mock_file_writer):
+                # Given: Token is valid
+                config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
+                config = valid_config
+                config['Auth']['Token'] = 'TOKEN1234'
+                mock_file_reader.read_yaml.return_value = config
 
-            # When: Fetching token
-            config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
-            token = config_repo.get_auth_token()
+                # When: Fetching token
+                config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
+                token = config_repo.get_auth_token()
 
-            # Then: Token is as expected
-            assert token is 'TOKEN1234'
+                # Then: Token is as expected
+                assert token is 'TOKEN1234'
 
-        def test_get_auth_token__missing_token(self, valid_config, mock_file_reader, mock_file_writer):
-            # Given: Token is missing
-            def config_wo_auth():
-                conf = valid_config
-                # As of now, 'Auth' isn't in the 'valid_config', but popping to make the
-                # test resilient to future changes
-                conf.pop('Auth', None)
-                return conf
+            def test_missing_token(self, valid_config, mock_file_reader, mock_file_writer):
+                # Given: Token is missing
+                def config_wo_token():
+                    conf = valid_config
+                    # As of now, 'Token' isn't by default in the 'valid_config',
+                    # but still popping to make the test resilient to future changes
+                    conf['Auth'].pop('Token', None)
+                    return conf
 
-            config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
-            config = config_wo_auth()
-            mock_file_reader.read_yaml.return_value = config
+                config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
+                config = config_wo_token()
+                mock_file_reader.read_yaml.return_value = config
 
-            # When: Fetching token
-            config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
-            token = config_repo.get_auth_token()
+                # When: Fetching token
+                config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
+                token = config_repo.get_auth_token()
 
-            # Then: No exception thrown, token is None
-            assert token is None
+                # Then: No exception thrown, token is None
+                assert token is None
+
+        class TestSkipWarning:
+            def test_skip(self, valid_config, mock_file_reader, mock_file_writer):
+                pass
+
+            def test_do_not_skip(self, valid_config, mock_file_reader, mock_file_writer):
+                pass
 
     class TestConfigValidation:
         @pytest.fixture
@@ -362,6 +372,19 @@ class TestConfigRepo:
                 method_args=(KataLanguage('java')),
                 regexes_to_match=[r'HasTemplateAtRoot', r'Missing'])
 
+        def test_missing_auth_entry(self, valid_config,
+                                    assert_given_config_raises_when_calling_given_method):
+            def config_wo_auth():
+                conf = valid_config
+                conf.pop('Auth')
+                return conf
+
+            assert_given_config_raises_when_calling_given_method(
+                config=config_wo_auth(),
+                method_to_call='get_auth_token',
+                method_args=(),
+                regexes_to_match=[r'Auth', r'Missing'])
+
     class TestIntegration:
         def test_valid_config(self, tmp_path: Path):
             def write_config(config_contents):
@@ -383,6 +406,8 @@ class TestConfigRepo:
                 HasTemplateAtRoot:
                     java: False
                     elixir: True
+                    
+                Auth: {}
             """)
 
             # When: Creating a repo with real dependencies
