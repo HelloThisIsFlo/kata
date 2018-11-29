@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from pprint import pprint
+from textwrap import dedent
 from typing import List
 
 import click
@@ -11,7 +12,7 @@ from kata.data.repos import KataTemplateRepo, KataLanguageRepo, ConfigRepo
 from kata.domain.exceptions import KataError, KataLanguageNotFound, KataTemplateNotFound
 from kata.domain.grepo import GRepo
 from kata.domain.models import DownloadableFile
-from kata.domain.services import InitKataService
+from kata.domain.services import InitKataService, LoginService
 
 SANDBOX = Path('./sandbox')
 
@@ -29,22 +30,7 @@ def cli(ctx: click.Context):
         print_warning('')
     main = KataMainContext(config_file)
     ctx.obj = main
-
-
-def print_error(msg):
-    click.secho(msg, fg='red')
-
-
-def print_success(msg):
-    click.secho(msg, fg='green')
-
-
-def print_warning(msg):
-    click.secho(msg, fg='yellow')
-
-
-def print_normal(msg):
-    click.echo(msg)
+    print_warning_if_not_auth(main)
 
 
 @cli.command()
@@ -200,6 +186,7 @@ class KataMainContext:
 
     grepo: GRepo
     init_kata_service: InitKataService
+    login_service: LoginService
 
     def __init__(self, config_file):
         self.config_file = config_file
@@ -221,7 +208,49 @@ class KataMainContext:
                                                      self.kata_template_repo,
                                                      self.grepo,
                                                      self.config_repo)
+            self.login_service = LoginService(self.config_repo)
 
         init_base_deps()
         init_repos()
         init_domain()
+
+
+def print_error(msg):
+    click.secho(msg, fg='red')
+
+
+def print_success(msg):
+    click.secho(msg, fg='green')
+
+
+def print_warning(msg):
+    click.secho(msg, fg='yellow')
+
+
+def print_normal(msg):
+    click.echo(msg)
+
+
+def print_warning_if_not_auth(main_context: KataMainContext):
+    if main_context.login_service.is_logged_in():
+        return
+    print_warning(dedent("""\
+    You are not logged-in!
+    
+    There is a rate-limit of 60 calls per hours on the Github API for un-authenticated requests.
+    
+    The 'kata' tool will work just fine if listing a couple of language or initializing
+    one or 2 kata on a private connection. But if you're experimenting around the rate limit 
+    will be quickly reached.
+    
+    Also, for un-authenticated requests the rate limit is shared across all users of the network,
+    the limiting is based on the public IP. For that reason, when using the tool in SoCraTes 
+    conferences, authentication is required.
+    
+    To skip this warning, set the following option to 'True' in the config:
+        
+        Auth:
+          SkipNotLoggedInWarning: True
+          
+    More information about login are available in the README.
+    """))
