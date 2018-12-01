@@ -8,8 +8,9 @@ class GithubApi:
     Basic wrapper around the Github Api
     """
 
-    def __init__(self):
+    def __init__(self, auth_token: str):
         self._requests = requests
+        self._auth_token = auth_token
 
     def contents(self, user, repo, path=''):
         url = f'https://api.github.com/repos/{user}/{repo}/contents'

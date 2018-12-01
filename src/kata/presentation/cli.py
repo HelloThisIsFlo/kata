@@ -28,9 +28,13 @@ def cli(ctx: click.Context):
         print_warning('A new config file will be created and loaded with default settings.')
         print_warning(f"Config file location: '{config_file_path_as_string}'")
         print_warning('')
-    main = KataMainContext(config_file)
-    ctx.obj = main
-    print_warning_if_not_auth(main)
+    try:
+        main = KataMainContext(config_file)
+        ctx.obj = main
+        print_warning_if_not_auth(main)
+    except KataError as error:
+        print_error(str(error))
+        exit(1)
 
 
 @cli.command()
@@ -193,12 +197,17 @@ class KataMainContext:
 
         def init_base_deps():
             self.executor = ThreadPoolExecutor(100)
-            self.api = GithubApi()
             self.file_writer = FileWriter()
             self.file_reader = FileReader()
 
-        def init_repos():
+        def init_config():
             self.config_repo = ConfigRepo(self.config_file, self.file_reader, self.file_writer)
+
+        def init_network():
+            auth_token = self.config_repo.get_auth_token()
+            self.api = GithubApi(auth_token)
+
+        def init_repos():
             self.kata_template_repo = KataTemplateRepo(self.api, self.config_repo)
             self.kata_language_repo = KataLanguageRepo(self.api, self.config_repo)
 
@@ -211,6 +220,8 @@ class KataMainContext:
             self.login_service = LoginService(self.config_repo)
 
         init_base_deps()
+        init_config()
+        init_network()
         init_repos()
         init_domain()
 
