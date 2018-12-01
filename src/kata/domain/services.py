@@ -96,3 +96,6 @@ class LoginService:
 
     def is_logged_in(self) -> bool:
         return self._config_repo.get_auth_token() is not None
+
+    def should_skip_not_logged_in_warning(self):
+        return self._config_repo.should_skip_not_logged_in_warning()

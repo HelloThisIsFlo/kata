@@ -253,7 +253,7 @@ class TestLoginService:
 
     class TestIsLoggedIn:
         def test_is_logged_in(self, login_service, config_repo: HardCoded.ConfigRepo):
-            config_repo.config['Auth'] = {'Token': 'TOKEN1234'}
+            config_repo.config['Auth']['Token'] = 'TOKEN1234'
             assert login_service.is_logged_in() is True
 
         def test_not_logged_in(self, login_service, config_repo: HardCoded.ConfigRepo):
@@ -261,3 +261,12 @@ class TestLoginService:
             # but still popping to make the test resilient to future changes
             config_repo.config['Auth'].pop('Token', None)
             assert login_service.is_logged_in() is False
+
+    class TestShouldSkipWarning:
+        def test_should_skip(self, login_service, config_repo: HardCoded.ConfigRepo):
+            config_repo.config['Auth']['SkipNotLoggedInWarning'] = True
+            assert login_service.should_skip_not_logged_in_warning() is True
+
+        def test_should_not_skip(self, login_service, config_repo: HardCoded.ConfigRepo):
+            config_repo.config['Auth']['SkipNotLoggedInWarning'] = False
+            assert login_service.should_skip_not_logged_in_warning() is False
