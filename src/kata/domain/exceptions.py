@@ -35,3 +35,8 @@ class ApiError(KataError):
 class ApiLimitReached(ApiError):
     def __init__(self):
         super().__init__("Api limit has been reached")
+
+
+class InvalidAuthToken(ApiError):
+    def __init__(self, token):
+        super().__init__(f"The token used for authentication is invalid | Token: '{token}'")

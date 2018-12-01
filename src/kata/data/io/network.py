@@ -1,6 +1,6 @@
 import requests
 
-from kata.domain.exceptions import ApiLimitReached
+from kata.domain.exceptions import ApiLimitReached, InvalidAuthToken
 
 
 class GithubApi:
@@ -25,12 +25,16 @@ class GithubApi:
         return response.text
 
     def _get_url(self, url: str):
-        response = self._requests.get(url)
+        response = self._requests.get(url, headers=self._headers())
         self._validate_response(response)
         return response
 
-    @staticmethod
-    def _validate_response(response: requests.Response):
+    def _headers(self):
+        if not self._auth_token:
+            return {}
+        return {'Authorization': f'token {self._auth_token}'}
+
+    def _validate_response(self, response: requests.Response):
         def rate_limit_reached():
             def unauthorised():
                 return response.status_code == 403
@@ -40,6 +44,11 @@ class GithubApi:
 
             return unauthorised() and limit_reached()
 
+        def invalid_auth():
+            return response.status_code == 401
+
         if rate_limit_reached():
             raise ApiLimitReached()
+        if invalid_auth():
+            raise InvalidAuthToken(self._auth_token)
         response.raise_for_status()
