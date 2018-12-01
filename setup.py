@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='kata',
-    version='1.0.0',
+    version='1.1.0',
     description='Kata made easy: A TDD setup in the language of your choice in a single command',
     long_description=readme(),
     keywords='test tdd kata clean-code softwarecraft',
