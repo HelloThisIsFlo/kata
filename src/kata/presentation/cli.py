@@ -234,6 +234,9 @@ def print_normal(msg):
 def print_warning_if_not_auth(main_context: KataMainContext):
     if main_context.login_service.is_logged_in():
         return
+    if main_context.login_service.should_skip_not_logged_in_warning():
+        return
+
     print_warning(dedent("""\
     You are not logged-in!
     
