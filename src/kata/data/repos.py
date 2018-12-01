@@ -37,6 +37,9 @@ class ConfigRepo:
             return None
         return self._config['Auth']['Token']
 
+    def should_skip_not_logged_in_warning(self):
+        return self._config['Auth']['SkipNotLoggedInWarning']
+
     def _create_config_file_with_defaults_if_doesnt_exist(self, config_file):
         if not config_file.exists():
             self._file_writer.write_yaml_to_file(config_file, defaults.DEFAULT_CONFIG)
@@ -48,7 +51,8 @@ class ConfigRepo:
         expected_schema = schema.Schema({'KataGRepo': {'User': str,
                                                        'Repo': str},
                                          'HasTemplateAtRoot': {schema.Optional(str): bool},
-                                         'Auth': {schema.Optional('Token'): str}})
+                                         'Auth': {'SkipNotLoggedInWarning': bool,
+                                                  schema.Optional('Token'): str}})
         try:
             expected_schema.validate(self._config)
         except schema.SchemaError as error:

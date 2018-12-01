@@ -206,8 +206,7 @@ class TestConfigRepo:
         return {'KataGRepo': {'User': 'some_user',
                               'Repo': 'some_repo'},
                 'HasTemplateAtRoot': {'python': False},
-                'Auth': {}}
-        # 'Auth': {'SkipNotLoggedInWarning': False}}
+                'Auth': {'SkipNotLoggedInWarning': False}}
 
     def test_load_config_at_initialization(self, valid_config, mock_file_reader, mock_file_writer):
         # Given: A config file path with valid config
@@ -294,11 +293,33 @@ class TestConfigRepo:
                 assert token is None
 
         class TestSkipWarning:
-            def test_skip(self, valid_config, mock_file_reader, mock_file_writer):
-                pass
-
             def test_do_not_skip(self, valid_config, mock_file_reader, mock_file_writer):
-                pass
+                # Given: Config file with SkipNotLoggedInWarning == True
+                config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
+                config = valid_config
+                config['Auth']['SkipNotLoggedInWarning'] = False
+                mock_file_reader.read_yaml.return_value = config
+
+                # When: Checking if should skip
+                config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
+                should_skip = config_repo.should_skip_not_logged_in_warning()
+
+                # Then: Should NOT skip
+                assert not should_skip
+
+            def test_skip(self, valid_config, mock_file_reader, mock_file_writer):
+                # Given: Config file with SkipNotLoggedInWarning == True
+                config_file = Path('NOT USED - MOCKED IN MOCK_FILE_READER')
+                config = valid_config
+                config['Auth']['SkipNotLoggedInWarning'] = True
+                mock_file_reader.read_yaml.return_value = config
+
+                # When: Checking if should skip
+                config_repo = ConfigRepo(config_file, mock_file_reader, mock_file_writer)
+                should_skip = config_repo.should_skip_not_logged_in_warning()
+
+                # Then: Should skip
+                assert should_skip
 
     class TestConfigValidation:
         @pytest.fixture
@@ -385,6 +406,19 @@ class TestConfigRepo:
                 method_args=(),
                 regexes_to_match=[r'Auth', r'Missing'])
 
+        def test_missing_skipnotloggedinwarning(self, valid_config,
+                                                assert_given_config_raises_when_calling_given_method):
+            def config_wo_skipnotloggedinwarning():
+                conf = valid_config
+                conf['Auth'].pop('SkipNotLoggedInWarning', None)
+                return conf
+
+            assert_given_config_raises_when_calling_given_method(
+                config=config_wo_skipnotloggedinwarning(),
+                method_to_call='should_skip_not_logged_in_warning',
+                method_args=(),
+                regexes_to_match=[r'SkipNotLoggedInWarning', r'Missing'])
+
     class TestIntegration:
         def test_valid_config(self, tmp_path: Path):
             def write_config(config_contents):
@@ -407,7 +441,8 @@ class TestConfigRepo:
                     java: False
                     elixir: True
                     
-                Auth: {}
+                Auth:
+                    SkipNotLoggedInWarning: True
             """)
 
             # When: Creating a repo with real dependencies
@@ -419,6 +454,7 @@ class TestConfigRepo:
             assert config_repo.has_template_at_root(KataLanguage('java')) is False
             assert config_repo.has_template_at_root(KataLanguage('elixir')) is True
             assert config_repo.has_template_at_root(KataLanguage('csharp')) is None
+            assert config_repo.should_skip_not_logged_in_warning()
 
         def test_missing_config_file_then_create_with_defaults(self, tmp_path: Path):
             # Given: A config path to a non-existing file
@@ -443,3 +479,4 @@ class TestConfigRepo:
                 assert config_repo.has_template_at_root(KataLanguage(language_name)) \
                        is defaults.DEFAULT_CONFIG['HasTemplateAtRoot'][language_name]
             assert config_repo.has_template_at_root(KataLanguage('fakelanguagethatdoesntexist')) is None
+            assert not config_repo.should_skip_not_logged_in_warning()

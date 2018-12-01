@@ -3,5 +3,5 @@ DEFAULT_CONFIG = {
                   'Repo': 'kata-bootstraps'},
 
     'HasTemplateAtRoot': {'java': False},
-    'Auth': {}
+    'Auth': {'SkipNotLoggedInWarning': False}
 }
