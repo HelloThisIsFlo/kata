@@ -5,6 +5,13 @@ Kata: A single command to get a ready to use TDD setup for your Kata, in your la
 
 Templates for all Katas can be found: https://github.com/swkBerlin/kata-bootstraps
 
+## Important note
+This project isn't dead, but has been left in the WIP state for the time being. Hopefully I will get some time to get back too it soon :)
+
+---
+
+
+## Development
 ### Note
 To differenciate between the Repository pattern and a Git/Github repo, the following naming convention has been used:
 * `GRepo`: Refers to a Git/Github Repo
