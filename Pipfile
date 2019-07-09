@@ -12,6 +12,7 @@ schema = "*"
 [dev-packages]
 pytest = "*"
 mypy = "*"
+tox = "*"
 
 [requires]
 python_version = "3.7"
